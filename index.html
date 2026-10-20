@@ -663,15 +663,9 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       <p class="reassure">The breakdown of the strategy is pinned in the Discord</p>
     </form>
 
-    <!-- Proof: Jean Ivan's own results, then members' wins. The images are listed in PROOF in the script below. -->
-    <section class="receipts" aria-label="My results">
-      <h2 class="sub">This Strategy <span class="hl">Changed Everything</span></h2>
-      <div class="receipts__grid" data-proof="mine"></div>
-    </section>
-
-    <section class="receipts" aria-label="Community results">
-      <h2 class="sub">Real Wins From The <span class="hl">JFX Community</span></h2>
-      <div class="receipts__grid" data-proof="community"></div>
+    <!-- Proof: Jean Ivan's own results mixed with members' wins. The images are listed in PROOF in the script below. -->
+    <section class="receipts" aria-label="Results">
+      <div class="receipts__grid" data-proof></div>
     </section>
 
     <button class="btn-gold" type="button" id="back-to-form" style="max-width:560px">Submit For Discord Access</button>
@@ -928,17 +922,11 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       </section>
     </div>
 
-    <h2 class="step"><b>Step #3:</b> See My Own Results</h2>
+    <h2 class="step"><b>Step #3:</b> See The Results From Me And The JFX Community</h2>
 
-    <!-- Jean Ivan's own results (listed in PROOF in the script below) -->
-    <section class="receipts" aria-label="Jean Ivan's results">
-      <div class="receipts__grid" data-proof="mine"></div>
-    </section>
-
-    <h2 class="step"><b>Step #4:</b> See What The JFX Community Is Achieving</h2>
-
-    <section class="receipts" aria-label="Community results">
-      <div class="receipts__grid" data-proof="community"></div>
+    <!-- Jean Ivan's own results mixed with members' wins (listed in PROOF in the script below) -->
+    <section class="receipts" aria-label="Results">
+      <div class="receipts__grid" data-proof></div>
     </section>
 
     <footer class="foot">
@@ -1040,54 +1028,50 @@ const APPLY2_QUESTIONS = [
   }
 ];
 
-// Results galleries, drawn into every data-proof="mine" / data-proof="community" grid (page 1 and /booked).
+// Results gallery, drawn into every data-proof grid (page 1 and /booked), in this order.
 // Each entry: [file in assets/jean-ivan/proof/, width, height, description]. NAME.webp shows on the page,
 // NAME-full.webp opens when the image is tapped. Originals are in assets/jean-ivan/testimonials/.
-// "mine" is Jean Ivan's own results; "community" is wins members posted in the Discord.
-const PROOF = {
-  mine: [
-    ["jean-01", 800, 362, "FTMO certificates for Jeanfx: $26,915.51 in overall rewards and a $16,133.04 reward"],
-    ["jean-02", 800, 315, "Jean's post about making $25k in June, with a Topstep proof of payout of $19,770 to Jean Yvan B."],
-    ["jean-03", 800, 655, "Alpha Capital certificate of disbursement: $4,956.00 performance fee to Jean Yvan, his first payout of the month"],
-    ["jean-04", 800, 396, "Withdrawal certificate for $2,291.62 to Jean Yvan Benimana"],
-    ["jean-05", 800, 532, "JeanFx Trading announcing an Equity Edge funded account and a $2.1k payout, with the funded trader certificate and account balance"],
-    ["jean-06", 800, 533, "Equity Edge payout certificate: $1,680 to Jean Yvan"],
-    ["jean-07", 800, 404, "Payout of $724.48 to Jean Yvan Benimana, with the withdrawal confirmations"],
-    ["jean-08", 800, 436, "Lucid funded account (LucidPro 150K) and an Alpha Capital certificate of achievement for Jean Yvan Benimana"],
-    ["jean-09", 800, 390, "Funded account certificate for Jean Yvan Benimana"],
-    ["jean-10", 800, 386, "Funded trader certificate for Jean Yvan on a 100K challenge"],
-    ["jean-11", 800, 459, "FTMO certificates for Jeanfx: passed the FTMO Challenge and passed Verification"],
-    ["jean-12", 800, 603, "Alpha Capital phase 1 certificate of achievement for Jean Gashumba"],
-    ["jean-13", 800, 678, "Alpha Trader phase 1 achievement certificate for Jean Yvan Benimana G"],
-  ],
-  community: [
-    ["community-01", 800, 589, "FundedNext performance reward certificate of $19,694.08 on a 200K account, posted by fifa"],
-    ["community-02", 800, 557, "FundedNext performance reward certificate of $13,332.37 on a 100K account, posted by fifa"],
-    ["community-03", 800, 405, "QT Funded certificate: $6,196.00 performance fee to Lawrence Long"],
-    ["community-04", 800, 737, "QT Funded certificate: Mohamud M. passed the $25,000 two-step challenge, posted by sakkooo10"],
-    ["community-05", 652, 958, "Payouts screen showing $1,448.37 available, posted by 1upMR thanking JeanFx Trading"],
-    ["community-06", 800, 925, "FundedNext reward certificate of $580.00 plus phase one and phase two certificates, posted by NOBEIL"],
-    ["community-07", 800, 587, "FundedNext performance reward certificate of $406.58, posted by NOBEIL thanking Jean"],
-    ["community-08", 800, 614, "FundedNext performance reward certificate of $341.36 for Desmond, posted by NOBEIL"],
-    ["community-09", 800, 479, "FundedNext performance reward certificate of $277.92, posted by NOBEIL thanking Jean and JeanFx Trading"],
-    ["community-10", 800, 670, "FundedNext performance reward certificate of $162.13, posted by NOBEIL"],
-    ["community-11", 800, 393, "FundedNext performance reward certificate of $92.64, posted by NOBEIL"],
-    ["community-12", 526, 838, "Topstep email congratulating Romeo on earning funding, posted by Rome"],
-    ["community-13", 800, 641, "Alpha Capital passed verification certificate for Imran Ismail, posted by 1upMR"],
-    ["community-14", 800, 751, "FTMO passed verification certificate for Mohammed Ameen, posted by fatbw0y"],
-    ["community-15", 800, 480, "Phase 1 completed and challenge completed certificates for Shema Tevin on a 5K challenge, posted by Maestro"],
-    ["community-16", 800, 415, "Phase one and phase two certificates, posted by Salman weslati thanking Jean on moving to the funded stage"],
-    ["community-17", 570, 880, "Evaluation completed email for phase 2, posted by Errol Silinda"],
-    ["community-18", 800, 432, "FundedNext Elite Trader certificate and a phase 2 complete message, posted by Abidul"],
-    ["community-19", 800, 614, "FundedNext certificate of appreciation as an Elite Trader, posted by Abidul"],
-    ["community-20", 800, 690, "FundedNext Elite Trader certificate, posted by NOBEIL thanking Jean"],
-    ["community-21", 800, 536, "FundedNext Elite Trader certificate for AbdulfatahFX, posted by FatahGOLDSTAN"],
-    ["community-22", 800, 768, "FundedNext Elite Trader certificate, posted by NOBEIL thanking Jean"],
-    ["community-23", 800, 347, "FundedNext reward and Crown Trader certificates, posted by Amirmuktar"],
-    ["community-24", 618, 874, "Phone screenshots of a QT Funded passed verification and a $100,000 account, posted by Emrys"],
-    ["community-25", 800, 410, "Trading history of a 10K account passed in one trade, with a member's note about scaling up"],
-  ]
-};
+// jean-NN are Jean Ivan's own results; community-NN are wins members posted in the Discord.
+const PROOF = [
+  ["jean-01", 800, 362, "FTMO certificates for Jeanfx: $26,915.51 in overall rewards and a $16,133.04 reward"],
+  ["community-01", 800, 589, "FundedNext performance reward certificate of $19,694.08 on a 200K account, posted by fifa"],
+  ["community-02", 800, 557, "FundedNext performance reward certificate of $13,332.37 on a 100K account, posted by fifa"],
+  ["jean-02", 800, 315, "Jean's post about making $25k in June, with a Topstep proof of payout of $19,770 to Jean Yvan B."],
+  ["community-03", 800, 405, "QT Funded certificate: $6,196.00 performance fee to Lawrence Long"],
+  ["community-04", 800, 737, "QT Funded certificate: Mohamud M. passed the $25,000 two-step challenge, posted by sakkooo10"],
+  ["jean-03", 800, 655, "Alpha Capital certificate of disbursement: $4,956.00 performance fee to Jean Yvan, his first payout of the month"],
+  ["community-05", 652, 958, "Payouts screen showing $1,448.37 available, posted by 1upMR thanking JeanFx Trading"],
+  ["community-06", 800, 925, "FundedNext reward certificate of $580.00 plus phase one and phase two certificates, posted by NOBEIL"],
+  ["jean-04", 800, 396, "Withdrawal certificate for $2,291.62 to Jean Yvan Benimana"],
+  ["community-07", 800, 587, "FundedNext performance reward certificate of $406.58, posted by NOBEIL thanking Jean"],
+  ["community-08", 800, 614, "FundedNext performance reward certificate of $341.36 for Desmond, posted by NOBEIL"],
+  ["jean-05", 800, 532, "JeanFx Trading announcing an Equity Edge funded account and a $2.1k payout, with the funded trader certificate and account balance"],
+  ["community-09", 800, 479, "FundedNext performance reward certificate of $277.92, posted by NOBEIL thanking Jean and JeanFx Trading"],
+  ["community-10", 800, 670, "FundedNext performance reward certificate of $162.13, posted by NOBEIL"],
+  ["jean-06", 800, 533, "Equity Edge payout certificate: $1,680 to Jean Yvan"],
+  ["community-11", 800, 393, "FundedNext performance reward certificate of $92.64, posted by NOBEIL"],
+  ["community-12", 526, 838, "Topstep email congratulating Romeo on earning funding, posted by Rome"],
+  ["jean-07", 800, 404, "Payout of $724.48 to Jean Yvan Benimana, with the withdrawal confirmations"],
+  ["community-13", 800, 641, "Alpha Capital passed verification certificate for Imran Ismail, posted by 1upMR"],
+  ["community-14", 800, 751, "FTMO passed verification certificate for Mohammed Ameen, posted by fatbw0y"],
+  ["jean-08", 800, 436, "Lucid funded account (LucidPro 150K) and an Alpha Capital certificate of achievement for Jean Yvan Benimana"],
+  ["community-15", 800, 480, "Phase 1 completed and challenge completed certificates for Shema Tevin on a 5K challenge, posted by Maestro"],
+  ["community-16", 800, 415, "Phase one and phase two certificates, posted by Salman weslati thanking Jean on moving to the funded stage"],
+  ["jean-09", 800, 390, "Funded account certificate for Jean Yvan Benimana"],
+  ["community-17", 570, 880, "Evaluation completed email for phase 2, posted by Errol Silinda"],
+  ["community-18", 800, 432, "FundedNext Elite Trader certificate and a phase 2 complete message, posted by Abidul"],
+  ["jean-10", 800, 386, "Funded trader certificate for Jean Yvan on a 100K challenge"],
+  ["community-19", 800, 614, "FundedNext certificate of appreciation as an Elite Trader, posted by Abidul"],
+  ["community-20", 800, 690, "FundedNext Elite Trader certificate, posted by NOBEIL thanking Jean"],
+  ["jean-11", 800, 459, "FTMO certificates for Jeanfx: passed the FTMO Challenge and passed Verification"],
+  ["community-21", 800, 536, "FundedNext Elite Trader certificate for AbdulfatahFX, posted by FatahGOLDSTAN"],
+  ["community-22", 800, 768, "FundedNext Elite Trader certificate, posted by NOBEIL thanking Jean"],
+  ["jean-12", 800, 603, "Alpha Capital phase 1 certificate of achievement for Jean Gashumba"],
+  ["community-23", 800, 347, "FundedNext reward and Crown Trader certificates, posted by Amirmuktar"],
+  ["community-24", 618, 874, "Phone screenshots of a QT Funded passed verification and a $100,000 account, posted by Emrys"],
+  ["jean-13", 800, 678, "Alpha Trader phase 1 achievement certificate for Jean Yvan Benimana G"],
+  ["community-25", 800, 410, "Trading history of a 10K account passed in one trade, with a member's note about scaling up"],
+];
 
 /* ======================================================================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -1446,7 +1430,7 @@ document.addEventListener("keydown", e => {
 /* ---------- Results galleries (tap an image to see it bigger) ---------- */
 const PROOF_DIR = "/assets/jean-ivan/proof/";
 $$("[data-proof]").forEach(grid => {
-  grid.innerHTML = PROOF[grid.dataset.proof].map(([name, w, h, alt]) =>
+  grid.innerHTML = PROOF.map(([name, w, h, alt]) =>
     `<figure class="receipt"><button type="button" class="receipt__zoom" data-full="${PROOF_DIR + name}-full.webp"><img loading="lazy" decoding="async" src="${PROOF_DIR + name}.webp" width="${w}" height="${h}" alt="${esc(alt)}"></button></figure>`).join("");
 });
 const zoom = $("#zoom"), zoomImg = $("#zoom img");
