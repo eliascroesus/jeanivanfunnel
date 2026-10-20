@@ -10,8 +10,11 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
      `APPLY2_QUESTIONS`). Calendly loads in the background and appears after the last answer.
    - Add `?v=1` or `?v=2` to a link to see a specific version.
 3. **Booked** (`/booked`): next-steps video, FAQ videos and more results.
+4. **Not qualified** (`/not-qualified`): where applicants land instead of the calendar when their investment
+   answer is in `CONFIG.disqualify` ("Under $500" on V1, "don't have the resources" on V2). Their answers still
+   go to the sheet. Put the Discord invite in `CONFIG.discordUrl` to show a "Join The Free Discord" button.
 
-`vercel.json` serves `index.html` at `/apply`, `/apply-2` and `/booked`. Images and clips go in
+`vercel.json` serves `index.html` at `/apply`, `/apply-2`, `/booked` and `/not-qualified`. Images and clips go in
 `assets/jean-ivan/`. Testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that
 folder's README). The page uses compressed copies in `assets/jean-ivan/proof/`, listed in `PROOF` in the script:
 Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`), each with a small `NAME.webp`
