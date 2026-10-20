@@ -12,9 +12,10 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
 3. **Booked** (`/booked`): next-steps video, FAQ videos and more results.
 
 `vercel.json` serves `index.html` at `/apply`, `/apply-2` and `/booked`. Images and clips go in
-`assets/jean-ivan/`. The results galleries on page 1 and page 3 are placeholders until real screenshots
-are added; the comment above each gallery shows the markup to swap in. Student testimonial proof goes in
-`assets/jean-ivan/testimonials/` (upload steps are in that folder's README).
+`assets/jean-ivan/`. Testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that
+folder's README). The page uses compressed copies in `assets/jean-ivan/proof/`, listed in `PROOF` in the script:
+Jean Ivan's own results (`jean-NN`) and community wins (`community-NN`), each with a small `NAME.webp` for
+the page and a `NAME-full.webp` that opens when the image is tapped. Page 1 and `/booked` show all of them.
 
 ## Hosting
 

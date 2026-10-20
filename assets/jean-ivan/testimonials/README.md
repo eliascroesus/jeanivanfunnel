@@ -19,5 +19,5 @@ funded-account certificates, broker P&L screenshots, short video clips.
 Only use real testimonials you have the person's OK to share. Blur out account numbers, emails and
 anything else private before uploading.
 
-Uploaded files are live on the site at `/assets/jean-ivan/testimonials/<file name>`, but they don't
-appear on any page until they're added to `index.html`.
+New uploads don't appear on the pages by themselves: each one is compressed into `assets/jean-ivan/proof/`
+and added to the `PROOF` list in `index.html`. Keep the originals here.
