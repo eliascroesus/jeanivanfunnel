@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Trading Funnel</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +43,9 @@ html:not([data-page="booked"]) #view-booked { display: none; }
   --card-ink: #0f1f17;
   --card-muted: #627a6c;
   --line: #dce8e1;
-  --field: #f4faf6;
+  --field: #eef0f3;         /* empty input box: neutral grey */
+  --field-line: #d3d7dd;
+  --field-done: #ffffff;    /* once it's filled in or picked */
   --danger: #d93a3a;
   --dc-bg: #2b2d31;        /* Discord message card */
   --dc-fg: #dbdee1;
@@ -111,6 +116,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 /* Wide screens: headings marked data-fit stay on one line; fitHeadings() shrinks the font until they fit. */
 @media (min-width: 761px) { [data-fit] { max-width: none; white-space: nowrap; } }
 .step {
+  color: #fff;
   font-size: clamp(1.1rem, 2.8vw, 1.6rem);
   font-weight: 800;
   font-style: italic;
@@ -180,12 +186,14 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
   font: inherit; font-size: var(--form-text);
   color: var(--card-ink);
   background: var(--field);
-  border: 1px solid var(--line);
+  border: 1px solid var(--field-line);
   border-radius: 10px;
   padding: 12px 14px;
   min-height: 46px;
+  transition: background-color .15s ease, border-color .15s ease;
 }
-.input::placeholder { color: #93a99b; }
+.input::placeholder { color: #8a9099; }
+.input:focus, .input:not(:placeholder-shown) { background: var(--field-done); }
 .input:focus, .select:focus { outline: none; border-color: var(--deep); box-shadow: 0 0 0 3px rgba(11, 79, 46, .15); }
 .input[aria-invalid="true"] { border-color: var(--danger); }
 /* Custom dropdown: the real <select> stays in the form (hidden) and holds the value. */
@@ -195,13 +203,14 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
   width: 100%; min-height: 46px;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   font: inherit; font-size: var(--form-text); text-align: left;
-  color: var(--card-ink); background: var(--field);
-  border: 1px solid var(--line); border-radius: 10px;
+  color: var(--card-ink); background: var(--field-done);
+  border: 1px solid var(--field-line); border-radius: 10px;
   padding: 11px 14px; cursor: pointer;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
-.dd__btn:hover { border-color: #c0d4c7; }
-.dd__btn.is-empty .dd__value { color: #93a99b; }
+.dd__btn.is-empty { background: var(--field); }
+.dd__btn:hover { border-color: #b9bec6; }
+.dd__btn.is-empty .dd__value { color: #8a9099; }
 .dd__btn:focus-visible, .dd.is-open .dd__btn { outline: none; border-color: var(--deep); box-shadow: 0 0 0 3px rgba(11, 79, 46, .15); }
 .dd__chev { flex: none; width: 18px; height: 18px; color: var(--card-muted); transition: transform .2s ease; }
 .dd.is-open .dd__chev { transform: rotate(180deg); }
@@ -701,7 +710,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       <div class="video__bar"><span></span></div>
     </div>
 
-    <h2 class="step" data-fit><b>Step #2</b> Fill Out This Application To Apply For The <span class="nowrap">1-1</span> <span data-fill="program">Consistency Code</span> Mentorship</h2>
+    <h2 class="step" data-fit><b>Step #2</b> Fill Out This Application To Apply For The <span class="nowrap">1-1</span> <span data-fill="program">JFX Elite</span> Mentorship</h2>
 
     <section class="card booker" aria-label="Strategy call application">
       <div class="booker__steps">
@@ -811,7 +820,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       <div class="video__bar"><span></span></div>
     </div>
 
-    <h2 class="step" data-fit><b>Step #2</b> Fill Out This Application To Apply For The <span class="nowrap">1-1</span> <span data-fill="program">Consistency Code</span> Mentorship</h2>
+    <h2 class="step" data-fit><b>Step #2</b> Fill Out This Application To Apply For The <span class="nowrap">1-1</span> <span data-fill="program">JFX Elite</span> Mentorship</h2>
 
     <section class="card tf" id="tf" aria-label="Strategy call application">
       <div class="tf__progress" aria-hidden="true"><span id="tf-bar"></span></div>
@@ -873,7 +882,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 
     <div class="faqs">
       <section class="faq">
-        <h3>What's Inside The <span data-fill="program">Consistency Code</span> Mentorship?</h3>
+        <h3>What's Inside The <span data-fill="program">JFX Elite</span> Mentorship?</h3>
         <div class="video" data-video="faqInside">
           <div class="video__ph">
             <span class="video__tag">Video placeholder</span>
@@ -965,7 +974,7 @@ const CONFIG = {
   leadSheetUrl: "https://script.google.com/macros/s/AKfycbz5Kit_1dN9WRHCtjC8Idq49u2c5Rr9KMBf1MVEqUjxsxbIX2DWplN-WWwAhCSNyPob/exec",
 
   brand: "Jean Ivan",
-  program: "Consistency Code",   // mentorship name: "Apply For The 1-1 Consistency Code Mentorship"
+  program: "JFX Elite",   // mentorship name: "Apply For The 1-1 JFX Elite Mentorship"
   coach: "Jean Ivan",
   spotsLeft: 3,
   spotsFill: 88,               // % of the scarcity bar that's filled
