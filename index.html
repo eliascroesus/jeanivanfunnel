@@ -103,8 +103,6 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
   font-weight: 800;
   line-height: 1.25;
 }
-.sub--big { font-size: clamp(1.5rem, 4.2vw, 2.3rem); line-height: 1.2; max-width: 32ch; }
-@media (min-width: 420px) { .sub--big .hl { white-space: nowrap; } }
 /* Wide screens: headings marked data-fit stay on one line; fitHeadings() shrinks the font until they fit. */
 @media (min-width: 761px) { [data-fit] { max-width: none; white-space: nowrap; } }
 .step {
@@ -114,6 +112,9 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
   line-height: 1.25;
 }
 .step b { color: var(--accent); font-weight: 800; }
+/* Page 2: the three lines above the video are always the same size. On wide screens they share
+   data-fit="intro", so when the longest one has to shrink to fit, the others shrink with it. */
+.intro { font-size: clamp(1.1rem, 2.6vw, 1.45rem); }
 .nowrap { white-space: nowrap; }
 .warn {
   display: inline-flex; align-items: center; gap: 10px;
@@ -703,9 +704,9 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <main class="view" id="view-apply" data-view="apply" hidden>
   <div class="wrap">
 
-    <h1 class="sub" data-fit>Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
-    <h2 class="sub sub--big" data-fit>Do You Want To <span class="hl">Break Free</span> From <span class="hl">Strategy Hopping</span> &amp; <span class="hl">Emotional Trading?</span></h2>
-    <h2 class="step" data-fit><b>Step #1</b> Watch This Video To <b>Stop</b> The Cycle Once And For All.</h2>
+    <h1 class="sub intro" data-fit="intro">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
+    <h2 class="sub intro" data-fit="intro">Do You Want To <span class="hl">Break&nbsp;Free</span> From <span class="hl">Strategy&nbsp;Hopping</span> &amp; <span class="hl">Emotional&nbsp;Trading?</span></h2>
+    <h2 class="step intro" data-fit="intro"><b>Step #1</b> Watch This Video To <b>Stop</b> The Cycle Once And For All.</h2>
 
     <div class="video" data-video="vsl">
       <div class="video__ph">
@@ -805,9 +806,9 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <main class="view" id="view-apply2" data-view="apply2" hidden>
   <div class="wrap">
 
-    <h1 class="sub" data-fit>Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
-    <h2 class="sub sub--big" data-fit>Do You Want To <span class="hl">Break Free</span> From <span class="hl">Strategy Hopping</span> &amp; <span class="hl">Emotional Trading?</span></h2>
-    <h2 class="step" data-fit><b>Step #1</b> Watch This Video To <b>Stop</b> The Cycle Once And For All.</h2>
+    <h1 class="sub intro" data-fit="intro">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
+    <h2 class="sub intro" data-fit="intro">Do You Want To <span class="hl">Break&nbsp;Free</span> From <span class="hl">Strategy&nbsp;Hopping</span> &amp; <span class="hl">Emotional&nbsp;Trading?</span></h2>
+    <h2 class="step intro" data-fit="intro"><b>Step #1</b> Watch This Video To <b>Stop</b> The Cycle Once And For All.</h2>
 
     <div class="video" data-video="vsl">
       <div class="video__ph">
@@ -1108,19 +1109,26 @@ function route() {
 
 /* ---------- One-line headings ---------- */
 // From 761px wide, headings marked data-fit stay on one line and shrink just enough to fit the column.
-// Phones wrap them as usual.
+// Headings with the same data-fit name all take the smallest of their sizes. Phones wrap them as usual.
 const fitWide = matchMedia("(min-width: 761px)");
 function fitHeadings() {
+  const groups = {};
   $$("[data-fit]").forEach(el => {
     el.style.fontSize = "";
     if (!fitWide.matches || !el.offsetParent) return;
     const cs = getComputedStyle(el.parentElement);
     const room = el.parentElement.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     let size = parseFloat(getComputedStyle(el).fontSize);
-    if (el.scrollWidth <= room) return;
-    size = Math.floor(size * room / el.scrollWidth * 10) / 10;   // text width scales with font size
-    el.style.fontSize = size + "px";
-    while (el.scrollWidth > room && size > 12) el.style.fontSize = (size -= .5) + "px";
+    if (el.scrollWidth > room) {
+      size = Math.floor(size * room / el.scrollWidth * 10) / 10;   // text width scales with font size
+      el.style.fontSize = size + "px";
+      while (el.scrollWidth > room && size > 12) el.style.fontSize = (size -= .5) + "px";
+    }
+    if (el.dataset.fit) (groups[el.dataset.fit] ||= []).push([el, size]);
+  });
+  Object.values(groups).forEach(list => {
+    const size = Math.min(...list.map(([, s]) => s));
+    list.forEach(([el]) => { el.style.fontSize = size + "px"; });
   });
 }
 window.addEventListener("resize", fitHeadings);
