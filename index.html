@@ -382,6 +382,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .booker__steps .on i { background: var(--card-ink); }
 .booker__body { display: grid; grid-template-columns: 1fr 1fr; }
 .booker__form { padding: 20px; display: grid; gap: 14px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
+.booker__form { --form-text: .875rem; }   /* application form (V1): one smaller size for all of its text */
 .booker__form h3 { text-align: left; font-size: 1.1rem; font-weight: 800; }
 .booker__cal { position: relative; min-width: 0; min-height: 700px; }
 .cal-embed { height: 700px; transition: filter .3s ease; }
@@ -706,11 +707,11 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
         <form class="booker__form" id="apply-form" novalidate>
           <h3><span data-fill="brand">Jean Ivan</span> Strategy Call</h3>
           <div class="field">
-            <label for="a-ig">What's your Instagram? <span class="req">*</span></label>
+            <label for="a-ig">What's your Instagram?&nbsp;<span class="req">*</span></label>
             <input class="input" id="a-ig" name="instagram" autocomplete="off" placeholder="@handle" required>
           </div>
           <div class="field">
-            <label for="a-exp">What Is Your Experience As A Trader? <span class="req">*</span></label>
+            <label for="a-exp">What Is Your Experience As A Trader?&nbsp;<span class="req">*</span></label>
             <select class="select" data-dropdown id="a-exp" name="experience" required>
               <option value="">Select</option>
               <option>Complete beginner, haven't started yet</option>
@@ -720,7 +721,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
             </select>
           </div>
           <div class="field">
-            <label for="a-why">What Is The Main Reason You Want To Fix Your Trading? <span class="req">*</span></label>
+            <label for="a-why">What Is The Main Reason You Want To Fix Your Trading?&nbsp;<span class="req">*</span></label>
             <select class="select" data-dropdown id="a-why" name="motivation" required>
               <option value="">Select</option>
               <option>To replace my 9–5 income</option>
@@ -731,7 +732,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
             </select>
           </div>
           <div class="field">
-            <label for="a-invest">How much do you have saved up to invest in yourself, funded accounts, and your trading journey? <span class="req">*</span></label>
+            <label for="a-invest">How much do you have saved up to invest in yourself, funded accounts, and your trading journey?&nbsp;<span class="req">*</span></label>
             <select class="select" data-dropdown id="a-invest" name="investment" required>
               <option value="">Select</option>
               <option>Under $500</option>
@@ -742,7 +743,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
             </select>
           </div>
           <div class="field">
-            <label for="a-reason">What Is The Biggest Issue With Your Trading Right Now? <span class="req">*</span></label>
+            <label for="a-reason">What Is The Biggest Issue With Your Trading Right Now?&nbsp;<span class="req">*</span></label>
             <select class="select" data-dropdown id="a-reason" name="reason" required>
               <option value="">Select</option>
               <option>I don't have a strategy that works</option>
@@ -754,7 +755,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
             </select>
           </div>
           <div class="field">
-            <label for="a-ready">Are you ready to fix the issue in your previous answer? <span class="req">*</span></label>
+            <label for="a-ready">Are you ready to fix the issue in your previous answer?&nbsp;<span class="req">*</span></label>
             <select class="select" data-dropdown id="a-ready" name="ready" required>
               <option value="">Select</option>
               <option>Yes, I'm ready to start now</option>
@@ -1304,7 +1305,7 @@ function initTypeform() {
         ? `<textarea class="tf__input" id="${id}" name="${q.key}" rows="1" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title"></textarea>`
         : `<input class="tf__input" id="${id}" name="${q.key}" autocomplete="off" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title">`;
     return `<div class="tf__step" data-i="${i}" hidden>
-      <div class="tf__head"><span class="tf__num">${i + 1}${ARROW}</span><h3 class="tf__title${q.title.length > 110 ? " tf__title--long" : ""}" id="${id}-title">${esc(q.title)} <span class="req">*</span></h3></div>
+      <div class="tf__head"><span class="tf__num">${i + 1}${ARROW}</span><h3 class="tf__title${q.title.length > 110 ? " tf__title--long" : ""}" id="${id}-title">${esc(q.title)}&nbsp;<span class="req">*</span></h3></div>
       <div class="tf__body">
         ${q.help ? `<p class="tf__help">${q.help}</p>` : ""}
         ${field}
