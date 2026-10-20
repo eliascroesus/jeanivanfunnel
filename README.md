@@ -13,7 +13,8 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
 
 `vercel.json` serves `index.html` at `/apply`, `/apply-2` and `/booked`. Images and clips go in
 `assets/jean-ivan/`. The results galleries on page 1 and page 3 are placeholders until real screenshots
-are added; the comment above each gallery shows the markup to swap in.
+are added; the comment above each gallery shows the markup to swap in. Student testimonial proof goes in
+`assets/jean-ivan/testimonials/` (upload steps are in that folder's README).
 
 ## Hosting
 
