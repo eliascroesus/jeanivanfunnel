@@ -1478,7 +1478,10 @@ window.addEventListener("message", e => {
 const toast = (() => {
   const el = $("#toast"), list = CONFIG.recentJoins;
   let i = 0, timer = null;
+  const FIELDS = "input, textarea, select, .dd__btn";
+  const typing = () => !!document.activeElement?.matches(FIELDS);
   function show() {
+    if (typing()) { timer = setTimeout(show, 1500); return; }   // wait until they've left the form field
     const p = list[i++ % list.length];
     $("#toast-name").textContent = p.name;
     $("#toast-city").textContent = p.city;
@@ -1486,6 +1489,8 @@ const toast = (() => {
     el.classList.remove("is-out");
     timer = setTimeout(() => { el.classList.add("is-out"); timer = setTimeout(show, 7000); }, 5000);
   }
+  // Hide it the moment someone taps into a form field, so it never sits on top of the phone keyboard.
+  document.addEventListener("focusin", e => { if (e.target.matches(FIELDS)) el.classList.add("is-out"); });
   return {
     active(on) {
       clearTimeout(timer); el.classList.add("is-out");
