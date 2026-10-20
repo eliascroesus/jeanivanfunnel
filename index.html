@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trading Funnel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<script>
+  // Pick the page from the URL before anything draws, so /apply never flashes page 1.
+  (function () {
+    var pages = { "/apply": "apply", "/apply-2": "apply2", "/booked": "booked" };
+    var path = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1");
+    document.documentElement.setAttribute("data-page", pages[path] || "optin");
+  })();
+</script>
+<style>
+html:not([data-page="optin"]) #view-optin,
+html:not([data-page="apply"]) #view-apply,
+html:not([data-page="apply2"]) #view-apply2,
+html:not([data-page="booked"]) #view-booked { display: none; }
+/* Layout: three funnel steps in one file (opt-in → VSL + application → booked), each a
+   black-to-deep-green band with a centred column, white cards for forms, gold for the one action. */
+:root {
+  color-scheme: dark;
+  --ink: #030a06;          /* top of every band */
+  --deep: #0b4f2e;         /* bottom of every band */
+  --fg: #f3fbf6;
+  --muted: #a6cdb6;
+  --accent: #4ade80;       /* highlighted words in headlines */
+  --gold: #f7c948;
+  --gold-2: #e6a417;
+  --gold-ink: #241a02;
+  --card: #ffffff;
+  --card-ink: #0f1f17;
+  --card-muted: #627a6c;
+  --line: #dce8e1;
+  --field: #f4faf6;
+  --danger: #d93a3a;
+  --dc-bg: #2b2d31;        /* Discord message card */
+  --dc-fg: #dbdee1;
+  --dc-muted: #949ba4;
+  --dc-name: #f2f3f5;
+  --dc-feed: #1e1f22;      /* Discord channel background */
+  --ph: #0f2a1c;           /* video placeholder fill */
+  --ph-line: rgba(74, 222, 128, .12);
+
+  --display: "Montserrat", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --body: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--ink);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Bands & column ---------- */
+.view {
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--ink) 0, var(--deep) 1100px) var(--deep);
+  padding-block: 28px 56px;
+}
+.wrap {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.wrap--narrow { max-width: 760px; }
+
+
+/* ---------- Type ---------- */
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-align: center; }
+.headline {
+  font-size: clamp(1.7rem, 4.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  max-width: 30ch;
+}
+.hl { color: var(--accent); }
+.sub {
+  font-size: clamp(1.1rem, 2.6vw, 1.45rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+.sub--big { font-size: clamp(1.5rem, 4.2vw, 2.3rem); line-height: 1.2; max-width: 32ch; }
+@media (min-width: 420px) { .sub--big .hl { white-space: nowrap; } }
+.br-wide { display: none; }
+/* Wide screens: exactly two lines, with the font scaled so the longer line
+   ("Blown Accounts & Strategies That Fail?", about 22em wide) fits the column. */
+@media (min-width: 760px) {
+  .br-wide { display: inline; }
+  .sub--big { max-width: none; white-space: nowrap; font-size: min(2.3rem, calc((min(100vw, 880px) - 56px) / 23)); }
+}
+.step {
+  font-size: clamp(1.1rem, 2.8vw, 1.6rem);
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1.25;
+}
+.step b { color: var(--accent); font-weight: 800; }
+.warn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: clamp(1.05rem, 2.6vw, 1.5rem);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: .01em;
+}
+.warn span { text-align: center; }
+.warn svg { flex: none; width: 1.3em; height: 1.3em; color: var(--gold); }
+.warn u { text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+/* ---------- Scarcity bar ---------- */
+.scarcity {
+  width: 100%; max-width: 440px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: grid; gap: 8px;
+}
+.scarcity__row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pill {
+  font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid rgba(74, 222, 128, .55); color: var(--accent);
+  border-radius: 999px; padding: 3px 9px;
+}
+.spots { font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.meter { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.meter span {
+  display: block; height: 100%; width: var(--fill, 88%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #bbf7d0);
+  animation: fill 1.6s cubic-bezier(.2, .7, .2, 1);
+}
+@keyframes fill { from { width: 62%; } }
+.scarcity small { color: var(--muted); font-size: .72rem; display: flex; align-items: center; gap: 4px; }
+.scarcity small svg { width: 12px; height: 12px; color: var(--gold); }
+
+/* ---------- White form card ---------- */
+.card {
+  width: 100%;
+  background: var(--card);
+  color: var(--card-ink);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+}
+.optin { max-width: 560px; padding: 24px clamp(18px, 4vw, 30px) 18px; display: grid; gap: 12px; }
+.optin h2 { font-size: clamp(1.35rem, 3.6vw, 1.75rem); font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 10px; }
+.optin h2 svg { width: 1.1em; height: 1.1em; color: var(--deep); }
+
+.field { display: grid; gap: 4px; }
+.field label, .field__q { font-size: .82rem; font-weight: 700; line-height: 1.5; color: var(--card-ink); }
+.field label .req, .field__q .req { color: var(--danger); }
+.input, .select {
+  width: 100%;
+  font: inherit; font-size: .95rem;
+  color: var(--card-ink);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-height: 46px;
+}
+.input::placeholder { color: #93a99b; }
+.input:focus, .select:focus { outline: none; border-color: var(--deep); box-shadow: 0 0 0 3px rgba(11, 79, 46, .15); }
+.input[aria-invalid="true"] { border-color: var(--danger); }
+/* Radio choices (investment question) */
+.choices__grid { display: grid; gap: 8px; margin-top: 2px; }
+.choice {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  min-height: 46px; padding: 10px 12px;
+  background: var(--field); border: 1px solid var(--line); border-radius: 10px;
+  font-size: .93rem; font-weight: 500; color: var(--card-ink); cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.field .choice { font-size: .93rem; font-weight: 500; color: var(--card-ink); }   /* beat ".field label" */
+.choice:hover { border-color: #c0d4c7; }
+.choice input {
+  appearance: none; -webkit-appearance: none; margin: 0; flex: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #b3c7ba; background: var(--card);
+  display: grid; place-items: center; cursor: pointer;
+}
+.choice input::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--deep); transform: scale(0); transition: transform .15s ease; }
+.choice input:checked { border-color: var(--deep); }
+.choice input:checked::after { transform: scale(1); }
+.field .choice:has(input:checked) { border-color: var(--deep); background: #ebf7f0; font-weight: 700; color: var(--deep); }
+.choice:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(11, 79, 46, .2); }
+
+/* Custom dropdown: the real <select> stays in the form (hidden) and holds the value. */
+.dd { position: relative; }
+.dd select { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.dd__btn {
+  width: 100%; min-height: 46px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font: inherit; font-size: .95rem; text-align: left;
+  color: var(--card-ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 11px 14px; cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.dd__btn:hover { border-color: #c0d4c7; }
+.dd__btn.is-empty .dd__value { color: #93a99b; }
+.dd__btn:focus-visible, .dd.is-open .dd__btn { outline: none; border-color: var(--deep); box-shadow: 0 0 0 3px rgba(11, 79, 46, .15); }
+.dd__chev { flex: none; width: 18px; height: 18px; color: var(--card-muted); transition: transform .2s ease; }
+.dd.is-open .dd__chev { transform: rotate(180deg); }
+.dd__list {
+  position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px);
+  margin: 0; padding: 6px; list-style: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(15, 31, 23, .18);
+  max-height: 280px; overflow-y: auto;
+}
+.dd__opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  font-size: .93rem; color: var(--card-ink); cursor: pointer;
+}
+.dd__opt.is-active { background: #ebf7f0; }
+.dd__opt[aria-selected="true"] { color: var(--deep); font-weight: 700; }
+.dd__opt svg { flex: none; width: 16px; height: 16px; visibility: hidden; }
+.dd__opt[aria-selected="true"] svg { visibility: visible; }
+.phone { display: grid; grid-template-columns: auto 1fr; gap: 8px; }
+.phone .select { width: auto; padding-right: 8px; }
+.error { color: var(--danger); font-size: .8rem; min-height: 0; margin: 0; }
+
+.btn-gold {
+  width: 100%;
+  font: inherit; font-family: var(--display); font-weight: 800; font-size: 1rem;
+  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--gold), var(--gold-2));
+  border: 0; border-radius: 12px;
+  padding: 15px 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(230, 164, 23, .35), inset 0 1px 0 rgba(255, 255, 255, .5);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(230, 164, 23, .45), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.btn-gold:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.reassure { margin: -2px 0 0; text-align: center; font-size: .8rem; font-weight: 500; color: var(--card-muted); }
+.legal { text-align: center; font-size: .75rem; color: var(--card-muted); }
+.legal a { color: var(--card-muted); }
+
+/* ---------- Discord-style proof wall ---------- */
+.proof { width: 100%; columns: 2 300px; column-gap: 16px; }
+.dc {
+  break-inside: avoid;
+  margin: 0 0 16px;
+  background: var(--dc-bg);
+  color: var(--dc-fg);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: .9rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+.dc__head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.avatar {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: .85rem; color: #fff;
+  background: var(--av, #5865f2);
+}
+.dc__name { color: var(--dc-name); font-weight: 700; }
+.dc__time { color: var(--dc-muted); font-size: .75rem; margin-left: 4px; }
+.dc p { margin: 0 0 10px; }
+.mention { background: rgba(88, 101, 242, .3); color: #c9cdfb; border-radius: 3px; padding: 0 3px; }
+.shot {
+  display: grid; place-items: center; text-align: center;
+  height: var(--h, 170px);
+  border: 1.5px dashed rgba(219, 222, 225, .28);
+  border-radius: 8px;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .03) 0 10px, transparent 10px 20px);
+  color: var(--dc-muted);
+  font-size: .78rem; font-weight: 500;
+  padding: 10px;
+}
+.shot svg { width: 26px; height: 26px; display: block; margin: 0 auto 6px; opacity: .7; }
+.reacts { display: flex; gap: 6px; margin-top: 10px; }
+.reacts span {
+  background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 8px; padding: 1px 8px; font-size: .78rem; color: var(--dc-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Results gallery ---------- */
+.receipts { width: 100%; display: grid; gap: 18px; justify-items: center; }
+.receipts__grid { width: 100%; columns: 2 280px; column-gap: 14px; }
+.receipt {
+  break-inside: avoid;
+  margin: 0 0 14px;
+  background: #08190f;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .4);
+}
+.receipt img, .receipt video { display: block; width: 100%; max-width: 100%; height: auto; }
+.receipt figcaption { padding: 10px 14px; font-family: var(--display); font-weight: 700; font-size: .95rem; }
+.receipt figcaption b { color: var(--accent); font-weight: 800; }
+/* Results placeholder: swap each one for a real screenshot (see the comment above each gallery). */
+.receipt__ph {
+  display: grid; place-items: center; align-content: center; gap: 6px;
+  aspect-ratio: var(--ar, 4 / 3); padding: 16px; text-align: center;
+  background:
+    linear-gradient(var(--ph-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--ph-line) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--ph);
+  color: var(--muted); font-size: .78rem;
+}
+.receipt__ph svg { width: 30px; height: 30px; color: var(--accent); }
+.receipt__ph strong { font-family: var(--display); font-weight: 700; font-size: .95rem; color: var(--fg); }
+
+/* ---------- Video placeholder ---------- */
+.video {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background:
+    linear-gradient(var(--ph-line) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, var(--ph-line) 1px, transparent 1px) 0 0 / 48px 48px,
+    radial-gradient(ellipse at center, #17452e 0%, var(--ph) 70%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+}
+.video iframe, .video video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video__ph {
+  position: absolute; inset: 0;
+  display: grid; place-items: center; align-content: center; gap: 12px;
+  text-align: center; padding: 16px;
+}
+.video__tag {
+  font-family: var(--display); font-weight: 800; font-size: .7rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(74, 222, 128, .5); border-radius: 999px; padding: 4px 12px;
+}
+.video__play {
+  width: clamp(58px, 11vw, 88px); aspect-ratio: 1;
+  border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--accent); color: var(--ink);
+  display: grid; place-items: center;
+  box-shadow: 0 0 0 10px rgba(74, 222, 128, .18);
+  transition: transform .15s ease;
+}
+.video__play:hover { transform: scale(1.06); }
+.video__play svg { width: 42%; height: 42%; margin-left: 8%; }
+.video__name { font-family: var(--display); font-weight: 700; font-size: clamp(.9rem, 2.2vw, 1.15rem); }
+.video__meta { color: var(--muted); font-size: .8rem; }
+.video__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(255, 255, 255, .12); }
+.video__bar span { display: block; height: 100%; width: 14%; background: var(--accent); }
+.video.is-playing .video__play { background: var(--gold); }
+.video:has(.autoplay:not([hidden])) .video__ph { visibility: hidden; }
+
+.autoplay {
+  position: absolute; z-index: 2;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(78%, 340px);
+  display: grid; justify-items: center; gap: 8px;
+  padding: 18px 14px;
+  font: inherit; color: #fff; cursor: pointer;
+  background: rgba(21, 128, 61, .92);
+  border: 2px solid rgba(255, 255, 255, .85);
+  border-radius: 6px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .4);
+}
+.autoplay strong { font-family: var(--display); font-weight: 800; font-size: clamp(.95rem, 2.6vw, 1.25rem); }
+.autoplay span { font-family: var(--display); font-weight: 700; font-size: clamp(.85rem, 2.2vw, 1.05rem); }
+.autoplay svg { width: clamp(44px, 9vw, 64px); height: auto; }
+
+/* ---------- Apply: form + calendar ---------- */
+.booker { max-width: 860px; overflow: hidden; }
+.booker__steps {
+  display: flex; justify-content: center; gap: 22px;
+  font-size: .78rem; color: var(--card-muted);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 16px;
+}
+.booker__steps span { display: inline-flex; align-items: center; gap: 6px; }
+.booker__steps i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.booker__steps .on { color: var(--card-ink); font-weight: 700; }
+.booker__steps .on i { background: var(--card-ink); }
+.booker__body { display: grid; grid-template-columns: 1fr 1fr; }
+.booker__form { padding: 20px; display: grid; gap: 12px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
+.booker__form h3 { text-align: left; font-size: 1.1rem; font-weight: 800; }
+.booker__cal { position: relative; min-width: 0; min-height: 700px; }
+.cal-embed { height: 700px; transition: filter .3s ease; }
+.cal-embed.is-locked { filter: blur(7px); pointer-events: none; user-select: none; }
+.cal__lock {
+  position: absolute; inset: 0; z-index: 2;
+  display: grid; place-items: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, .35);
+}
+.cal__msg {
+  width: min(100%, 280px);
+  background: var(--card); color: var(--card-ink);
+  border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 31, 23, .2);
+  padding: 16px 18px; text-align: center;
+  display: grid; gap: 6px; justify-items: center;
+}
+.cal__msg svg { width: 26px; height: 26px; color: var(--deep); }
+.cal__msg strong { font-family: var(--display); font-weight: 800; font-size: 1rem; }
+.cal__msg span { font-size: .85rem; color: var(--card-muted); }
+
+/* ---------- Apply V2: one question at a time ---------- */
+.tf { max-width: 860px; position: relative; overflow: hidden; }
+.tf__progress { height: 4px; background: var(--line); }
+.tf__progress span { display: block; height: 100%; width: 0; background: var(--deep); transition: width .4s ease; }
+.tf__form { min-height: 460px; display: grid; align-content: center; padding: clamp(28px, 5vw, 56px) clamp(20px, 5vw, 48px) 76px; }
+.tf__step { display: grid; gap: 18px; }
+.tf__step.is-in { animation: tf-in .35s ease both; }
+@keyframes tf-in { from { opacity: 0; transform: translateY(18px); } }
+.tf__head { display: flex; gap: 10px; align-items: baseline; }
+.tf__num {
+  flex: none; display: inline-flex; align-items: center; gap: 3px;
+  font: 700 .85rem var(--display); color: var(--deep);
+}
+.tf__num svg { width: 13px; height: 13px; }
+/* Questions fill the card's width (normal wrapping, not the page's "balance") and scale with the screen;
+   long questions are a step smaller so they don't take over a phone screen. */
+.tf__title {
+  margin: 0; text-align: left; text-wrap: pretty;
+  font-family: var(--body); font-weight: 500; letter-spacing: -.01em;
+  font-size: clamp(1.3rem, .9rem + 1.6vw, 1.75rem); line-height: 1.32; color: var(--card-ink);
+}
+.tf__title--long { font-size: clamp(1.12rem, .85rem + 1.1vw, 1.5rem); }
+.tf__title .req { color: var(--danger); }
+.tf__body { display: grid; gap: 26px; padding-left: 26px; }
+.tf__help { margin: -12px 0 2px; font-size: 1rem; color: var(--card-muted); }
+.tf__help b { color: var(--card-ink); }
+.tf__opts { display: grid; gap: 10px; max-width: 540px; }
+.tf__opt {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: 10px; cursor: pointer;
+  border: 1px solid #c3dccd; background: rgba(11, 79, 46, .04);
+  font-size: 1rem; color: var(--card-ink);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.tf__opt:hover { background: rgba(11, 79, 46, .09); }
+.tf__opt input { position: absolute; opacity: 0; pointer-events: none; }
+.tf__key {
+  flex: none; width: 26px; height: 26px; display: grid; place-items: center;
+  border: 1px solid #c3dccd; border-radius: 6px; background: var(--card);
+  font: 700 .75rem var(--body); color: var(--deep);
+}
+.tf__opt > svg { flex: none; width: 18px; height: 18px; margin-left: auto; color: var(--deep); visibility: hidden; }
+.tf__opt:has(input:checked) { border-color: var(--deep); background: rgba(11, 79, 46, .1); }
+.tf__opt:has(input:checked) .tf__key { background: var(--deep); border-color: var(--deep); color: #fff; }
+.tf__opt:has(input:checked) > svg { visibility: visible; }
+.tf__opt:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(11, 79, 46, .2); }
+.tf__opt.is-picked { animation: tf-blink .16s 2; }
+@keyframes tf-blink { 50% { background: rgba(11, 79, 46, .2); } }
+.tf__input {
+  display: block; width: 100%; max-width: 680px;
+  border: 0; border-bottom: 2px solid var(--card-ink); border-radius: 0; background: transparent;
+  padding: 8px 0 10px; font: 400 clamp(1.25rem, 2.8vw, 1.7rem) var(--body); line-height: 1.35; color: var(--card-ink);
+}
+textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 18px); }
+.tf__input::placeholder { color: #afc3b6; }
+.tf__input:focus { outline: none; border-bottom-color: var(--deep); }
+.tf__actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.tf__ok {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px; border: 0; border-radius: 8px; cursor: pointer;
+  background: var(--deep); color: #fff; font: 700 1rem var(--display);
+}
+.tf__ok svg { width: 16px; height: 16px; }
+.tf__ok:hover { filter: brightness(1.15); }
+.tf__hint { font-size: .8rem; color: var(--card-muted); }
+@media (hover: none) { .tf__hint { display: none; } }
+.tf__err { margin: 0; font-size: .88rem; font-weight: 600; color: var(--danger); }
+.tf__nav { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 2px; }
+.tf__nav button {
+  width: 38px; height: 34px; display: grid; place-items: center; border: 0; cursor: pointer;
+  background: var(--deep); color: #fff;
+}
+.tf__nav button:first-child { border-radius: 8px 0 0 8px; }
+.tf__nav button:last-child { border-radius: 0 8px 8px 0; }
+.tf__nav button:disabled { opacity: .35; cursor: default; }
+.tf__nav svg { width: 18px; height: 18px; }
+.tf__cal { position: relative; }
+.tf__cal .cal-embed { height: 720px; overflow: hidden; }
+/* Calendly draws ~66px of empty space above its card inside its own frame on desktop. Pull the frame
+   up behind our card's edge so the booking starts right under our header. Tune --cal-crop-top if
+   Calendly ever changes that gap. Phones use Calendly's edge-to-edge layout, so no crop there. */
+@media (min-width: 761px) {
+  .tf__cal .cal-embed { --cal-crop-top: 66px; }
+  .tf__cal .cal-embed iframe { display: block; margin-top: calc(-1 * var(--cal-crop-top)); height: calc(100% + var(--cal-crop-top)) !important; }
+}
+.tf__cal.is-waiting { position: absolute; left: 0; right: 0; top: 4px; visibility: hidden; pointer-events: none; }
+.tf__calhead {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line);
+  font: 700 .95rem var(--display); color: var(--deep); text-align: center;
+}
+.tf__calhead svg { flex: none; width: 18px; height: 18px; }
+.tf.is-done .tf__form, .tf.is-done .tf__nav { display: none; }
+.tf.is-done .tf__cal { animation: tf-in .4s ease both; }
+@media (max-width: 560px) { .tf__body { padding-left: 0; } }
+
+/* ---------- Booked ---------- */
+.booking {
+  width: 100%; max-width: 620px;
+  display: flex; gap: 14px; align-items: center;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 14px; padding: 14px 16px;
+}
+.booking svg { flex: none; width: 34px; height: 34px; color: var(--accent); }
+.booking div { min-width: 0; }
+.booking strong { display: block; font-family: var(--display); font-size: 1rem; }
+.booking span { color: var(--muted); font-size: .88rem; }
+.faq { width: 100%; display: grid; gap: 14px; justify-items: center; }
+.faq h3 { font-size: clamp(1.2rem, 3vw, 1.7rem); font-weight: 800; }
+.faqs { width: 100%; display: grid; gap: 40px; }
+
+/* ---------- Booked: video testimonials + screenshot feed ---------- */
+.video--split::before {
+  content: ""; position: absolute; inset: 0 50% 0 0;
+  background: rgba(255, 255, 255, .045);
+  border-right: 2px solid rgba(255, 255, 255, .1);
+}
+.video__who {
+  position: absolute; bottom: 14px;
+  font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); background: rgba(0, 0, 0, .4);
+  padding: 3px 8px; border-radius: 4px;
+}
+.video__who--l { left: 12px; }
+.video__who--r { right: 12px; }
+.more { font-size: clamp(1.15rem, 2.8vw, 1.5rem); font-weight: 800; }
+.feed {
+  width: 100%; max-width: 560px;
+  background: var(--dc-feed);
+  color: var(--dc-fg);
+  border-radius: 14px;
+  padding-block: 8px;
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, .4), 0 0 46px rgba(74, 222, 128, .22);
+  font-size: .92rem;
+}
+.msg { display: flex; gap: 12px; padding: 12px 16px; }
+.msg + .msg { padding-top: 4px; }
+.msg .avatar { width: 40px; height: 40px; }
+.msg__body { min-width: 0; flex: 1; }
+.msg__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.msg__name { font-weight: 700; color: var(--role, #86efac); }
+.role {
+  font-size: .64rem; font-weight: 700; letter-spacing: .04em;
+  background: rgba(255, 255, 255, .08); color: var(--dc-name);
+  border-radius: 4px; padding: 1px 5px;
+}
+.msg__time { color: var(--dc-muted); font-size: .74rem; }
+.msg p { margin: 2px 0 8px; }
+.msg .shot { max-width: 380px; }
+.shot--wide { height: auto; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; background-color: var(--ph); }
+.shots-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 420px; }
+.daysplit {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--dc-muted); font-size: .74rem; font-weight: 700;
+  padding: 10px 16px;
+}
+.daysplit::before, .daysplit::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, .1); }
+
+/* ---------- Footer ---------- */
+.foot { max-width: 720px; text-align: center; color: var(--muted); font-size: .72rem; line-height: 1.6; }
+.foot nav { display: flex; justify-content: center; gap: 14px; margin-bottom: 8px; font-size: .78rem; }
+
+/* ---------- Live join toast ---------- */
+.toast {
+  position: fixed; z-index: 20;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: min(360px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  display: flex; gap: 12px; align-items: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0f5132, #082a19);
+  border: 1px solid rgba(74, 222, 128, .3);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
+  color: var(--fg);
+  font-size: .88rem;
+  transition: opacity .35s ease, transform .35s ease;
+}
+.toast.is-out { opacity: 0; transform: translateY(14px); pointer-events: none; }
+.toast .avatar { width: 34px; height: 34px; background: var(--card); color: var(--deep); }
+.toast p { margin: 0; }
+.toast small { color: var(--muted); }
+.tick { color: #4ade80; font-weight: 700; }
+
+@media (min-width: 761px) { .only-stacked { display: none; } }
+@media (max-width: 760px) {
+  .only-wide { display: none; }
+  .booker__body { grid-template-columns: 1fr; }
+  .booker__form { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- =====================================================================
+     PAGE 1 — OPT-IN  (/)
+     ===================================================================== -->
+<main class="view" id="view-optin" data-view="optin">
+  <div class="wrap wrap--narrow">
+
+    <h1 class="headline">
+      Discover The <span class="hl">Simple Trading Strategy</span> That Took Me From
+      <span class="hl">Blown Accounts To Consistent Profits</span>
+    </h1>
+
+    <div class="scarcity" aria-label="Spots remaining">
+      <div class="scarcity__row">
+        <span class="pill">Limited free access</span>
+        <span class="spots"><span data-fill="spotsLeft">3</span> Spots Left</span>
+      </div>
+      <div class="meter"><span id="meter"></span></div>
+      <small><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>Spots moving fast…</small>
+    </div>
+
+    <form class="card optin" id="optin-form" novalidate>
+      <h2>Join The Free Discord
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M12 6v10m0 0-4-4m4 4 4-4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </h2>
+      <div class="field">
+        <input class="input" id="o-name" name="name" autocomplete="name" placeholder="Full Name*" aria-label="Full name" required>
+      </div>
+      <div class="field">
+        <div class="phone">
+          <select class="select" id="o-cc" name="cc" aria-label="Country code">
+            <option value="+1" data-country="US">🇺🇸 +1</option>
+            <option value="+1" data-country="CA">🇨🇦 +1</option>
+            <option value="+44" data-country="GB">🇬🇧 +44</option>
+            <option value="+61" data-country="AU">🇦🇺 +61</option>
+            <option value="+49" data-country="DE">🇩🇪 +49</option>
+            <option value="+971" data-country="AE">🇦🇪 +971</option>
+          </select>
+          <input class="input" id="o-phone" name="phone" type="tel" autocomplete="tel-national" placeholder="Phone*" aria-label="Phone" required>
+        </div>
+      </div>
+      <div class="field">
+        <input class="input" id="o-email" name="email" type="email" autocomplete="email" placeholder="Email*" aria-label="Email" required>
+      </div>
+      <p class="error" id="optin-error" role="alert" hidden></p>
+      <button class="btn-gold" type="submit" id="optin-submit">Submit For Discord Access</button>
+      <p class="reassure">The breakdown of the strategy is pinned in the Discord</p>
+    </form>
+
+    <!-- Proof: the coach's own results. Put the files in assets/jean-ivan/ and replace each placeholder
+         figure with one like this (images or muted looping .mp4 clips both work):
+         <figure class="receipt"><img loading="lazy" src="/assets/jean-ivan/pnl-march.png" alt="Broker dashboard showing …"><figcaption><b>+$4,210</b> in March</figcaption></figure>
+         <figure class="receipt"><video src="/assets/jean-ivan/live-trade.mp4" data-autoplay preload="none" muted loop playsinline aria-label="…"></video></figure> -->
+    <section class="receipts" aria-label="My results">
+      <h2 class="sub">This Strategy <span class="hl">Changed Everything</span></h2>
+      <div class="receipts__grid">
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>P&amp;L screenshot</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph" style="--ar: 3 / 4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Payout / withdrawal</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Funded account certificate</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph" style="--ar: 3 / 4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Broker statement</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Live trade recap</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Win rate / stats</strong><span>Results placeholder</span></div></figure>
+      </div>
+    </section>
+
+    <button class="btn-gold" type="button" id="back-to-form" style="max-width:560px">Submit For Discord Access</button>
+
+    <footer class="foot">
+      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
+      Trading involves substantial risk of loss and isn't suitable for everyone. Most people who trade
+      lose money. Nothing on this page is financial advice. The results shown are not typical and are not
+      a promise of what you will earn.
+    </footer>
+  </div>
+</main>
+
+<!-- =====================================================================
+     PAGE 2, VERSION 1 — THANK YOU + VSL + APPLICATION FORM  (/apply)
+     ===================================================================== -->
+<main class="view" id="view-apply" data-view="apply" hidden>
+  <div class="wrap">
+
+    <h1 class="sub">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
+    <h2 class="sub sub--big">Do You Want To <span class="hl">Break Free</span> From<br class="br-wide"> <span class="hl">Blown Accounts</span> &amp; <span class="hl">Strategies That&nbsp;Fail?</span></h2>
+    <h2 class="step"><b>Step #1</b> Watch This Video To See The <b>Exact Strategy</b> I Use To <b>Trade The Markets</b>.</h2>
+
+    <div class="video" data-video="vsl">
+      <div class="video__ph">
+        <span class="video__tag">Video placeholder</span>
+        <button class="video__play" type="button" aria-label="Play main VSL"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+        <span class="video__name">Main VSL</span>
+        <span class="video__meta">Swap in your video embed · ~10–20 min</span>
+      </div>
+      <div class="video__bar"><span></span></div>
+    </div>
+
+    <h2 class="step"><b>Step #2</b> Fill Out This Application To Apply For The 1-1 <span data-fill="program">Trading</span> Mentorship</h2>
+
+    <section class="card booker" aria-label="Strategy call application">
+      <div class="booker__steps">
+        <span class="on" id="st-form"><i></i>Fill out the form</span>
+        <span id="st-book"><i></i>Book your event</span>
+      </div>
+      <div class="booker__body">
+        <form class="booker__form" id="apply-form" novalidate>
+          <h3><span data-fill="brand">Jean Ivan</span> Strategy Call</h3>
+          <div class="field">
+            <label for="a-ig">What's your Instagram? <span class="req">*</span></label>
+            <input class="input" id="a-ig" name="instagram" autocomplete="off" placeholder="@handle" required>
+          </div>
+          <div class="field">
+            <label for="a-exp">Where Are You At With Trading? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-exp" name="experience" required>
+              <option value="">Select</option>
+              <option>Brand new, haven't placed a trade yet</option>
+              <option>I've traded a bit but I'm not consistent</option>
+              <option>I'm trading but losing money</option>
+              <option>I'm profitable and want to scale</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="a-reason">What's The Main Thing Stopping You Right Now? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-reason" name="reason" required>
+              <option value="">Select</option>
+              <option>I don't have a strategy that works</option>
+              <option>I keep losing money or blowing accounts</option>
+              <option>I can't control my emotions (fear, greed, revenge trading)</option>
+              <option>I've wasted money on courses and signals that didn't help</option>
+              <option>I don't have much time with my job</option>
+            </select>
+          </div>
+          <!-- Investment: radio buttons when the calendar sits beside the form, a dropdown when it stacks.
+               Both stay in sync; the radios carry the form value. -->
+          <div class="field only-stacked">
+            <label for="a-invest">How much have you set aside to invest in yourself and your trading? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-invest">
+              <option value="">Select</option>
+              <option>Under $500</option>
+              <option>$500 – $1,500</option>
+              <option>$1,500 – $3,000</option>
+              <option>$3,000 – $5,000</option>
+              <option>$5,000+</option>
+            </select>
+          </div>
+          <div class="field choices only-wide">
+            <span class="field__q" id="invest-q">How much have you set aside to invest in yourself and your trading? <span class="req">*</span></span>
+            <div class="choices__grid" role="radiogroup" aria-labelledby="invest-q">
+              <label class="choice"><input type="radio" name="investment" value="Under $500" required><span>Under $500</span></label>
+              <label class="choice"><input type="radio" name="investment" value="$500 – $1,500"><span>$500 – $1,500</span></label>
+              <label class="choice"><input type="radio" name="investment" value="$1,500 – $3,000"><span>$1,500 – $3,000</span></label>
+              <label class="choice"><input type="radio" name="investment" value="$3,000 – $5,000"><span>$3,000 – $5,000</span></label>
+              <label class="choice"><input type="radio" name="investment" value="$5,000+"><span>$5,000+</span></label>
+            </div>
+          </div>
+        </form>
+
+        <div class="booker__cal">
+          <!-- Calendly loads behind the blur as soon as page 2 opens; the blur lifts once the form is filled in -->
+          <div class="cal-embed is-locked" id="cal-embed" inert></div>
+          <div class="cal__lock" id="cal-lock">
+            <p class="cal__msg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <strong>Please fill out the form first</strong>
+              <span>Then pick a time that works for you.</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
+      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+    </footer>
+  </div>
+</main>
+
+<!-- =====================================================================
+     PAGE 2, VERSION 2 — THANK YOU + VSL + ONE-QUESTION-AT-A-TIME APPLICATION  (/apply-2)
+     Questions live in APPLY2_QUESTIONS in the script below.
+     ===================================================================== -->
+<main class="view" id="view-apply2" data-view="apply2" hidden>
+  <div class="wrap">
+
+    <h1 class="sub">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
+    <h2 class="sub sub--big">Do You Want To <span class="hl">Break Free</span> From<br class="br-wide"> <span class="hl">Blown Accounts</span> &amp; <span class="hl">Strategies That&nbsp;Fail?</span></h2>
+    <h2 class="step"><b>Step #1</b> Watch This Video To See The <b>Exact Strategy</b> I Use To <b>Trade The Markets</b>.</h2>
+
+    <div class="video" data-video="vsl">
+      <div class="video__ph">
+        <span class="video__tag">Video placeholder</span>
+        <button class="video__play" type="button" aria-label="Play main VSL"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+        <span class="video__name">Main VSL</span>
+        <span class="video__meta">Swap in your video embed · ~10–20 min</span>
+      </div>
+      <div class="video__bar"><span></span></div>
+    </div>
+
+    <h2 class="step"><b>Step #2</b> Fill Out This Application To Apply For The 1-1 <span data-fill="program">Trading</span> Mentorship</h2>
+
+    <section class="card tf" id="tf" aria-label="Strategy call application">
+      <div class="tf__progress" aria-hidden="true"><span id="tf-bar"></span></div>
+      <form class="tf__form" id="tf-form" novalidate></form>
+      <div class="tf__nav" id="tf-nav">
+        <button type="button" id="tf-prev" aria-label="Previous question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+        <button type="button" id="tf-next" aria-label="Next question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+      <!-- Calendly loads here (hidden) as soon as the page opens, and shows once the last answer is in -->
+      <div class="tf__cal is-waiting" id="tf-cal" inert>
+        <p class="tf__calhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Application done. Last step: pick a time for your call.</p>
+        <div class="cal-embed" id="tf-embed"></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
+      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+    </footer>
+  </div>
+</main>
+
+<!-- =====================================================================
+     PAGE 3 — POST-BOOKING  (/booked)
+     ===================================================================== -->
+<main class="view" id="view-booked" data-view="booked" hidden>
+  <div class="wrap">
+
+    <h1 class="warn">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 1 21h22L12 2z"/><path d="M12 9v5m0 3v.5" stroke="#030a06" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span>Wait your call is <u>not</u> confirmed yet…</span>
+    </h1>
+
+    <div class="booking" id="booking">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <div>
+        <strong id="booking-when">Your call is booked</strong>
+        <span id="booking-who"><span data-fill="brand">Jean Ivan</span> Strategy Call · a calendar invite is on its way</span>
+      </div>
+    </div>
+
+    <h2 class="step"><b>Step #1:</b> Watch This 2 Minute Video For Next Steps</h2>
+
+    <div class="video" data-video="nextSteps">
+      <div class="video__ph">
+        <span class="video__tag">Video placeholder</span>
+        <span class="video__name">Post-booking video · lays out pre-call steps</span>
+        <span class="video__meta">Swap in your video embed · ~2 min</span>
+      </div>
+      <button class="autoplay" type="button" id="unmute">
+        <strong>Your video has already started</strong>
+        <svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18h10l14-11v34L16 30H6z" fill="currentColor"/><path d="M40 16c3 3 3 13 0 16M47 10c6 6 6 22 0 28"/><path d="M4 4l56 40"/></svg>
+        <span>Click to listen</span>
+      </button>
+      <div class="video__bar"><span></span></div>
+    </div>
+
+    <h2 class="step"><b>Step #2:</b> Go Through Our FAQs</h2>
+
+    <div class="faqs">
+      <section class="faq">
+        <h3>What's Inside The <span data-fill="program">Trading</span> Mentorship?</h3>
+        <div class="video" data-video="faqInside">
+          <div class="video__ph">
+            <span class="video__tag">Video placeholder</span>
+            <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <span class="video__name">FAQ · What's inside the program</span>
+          </div>
+        </div>
+      </section>
+      <section class="faq">
+        <h3>Is <span data-fill="brand">Jean Ivan</span> Legit?</h3>
+        <div class="video" data-video="faqLegit">
+          <div class="video__ph">
+            <span class="video__tag">Video placeholder</span>
+            <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <span class="video__name">FAQ · Proof &amp; legitimacy</span>
+          </div>
+        </div>
+      </section>
+      <section class="faq">
+        <h3>Will I Work With <span data-fill="coach">Jean Ivan</span> Or An Assistant?</h3>
+        <div class="video" data-video="faqWho">
+          <div class="video__ph">
+            <span class="video__tag">Video placeholder</span>
+            <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <span class="video__name">FAQ · Who you actually work with</span>
+          </div>
+        </div>
+      </section>
+      <section class="faq">
+        <h3>Can I Do This With A Full-Time Job?</h3>
+        <div class="video" data-video="faqTime">
+          <div class="video__ph">
+            <span class="video__tag">Video placeholder</span>
+            <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <span class="video__name">FAQ · Time with a full-time job</span>
+          </div>
+        </div>
+      </section>
+      <section class="faq">
+        <h3>Do I Need A Lot Of Money To Start Trading?</h3>
+        <div class="video" data-video="faqCapital">
+          <div class="video__ph">
+            <span class="video__tag">Video placeholder</span>
+            <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <span class="video__name">FAQ · How much you need to start</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="step"><b>Step #3:</b> See My Own Results</h2>
+
+    <!-- Jean Ivan's own results. Put the files in assets/jean-ivan/ and swap each placeholder figure
+         for a real one (same markup as the gallery on page 1). -->
+    <section class="receipts" aria-label="Jean Ivan's results">
+      <div class="receipts__grid">
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Monthly P&amp;L</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph" style="--ar: 3 / 4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Payout certificate</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Live trade recap</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph" style="--ar: 3 / 4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Broker statement</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Trading journal</strong><span>Results placeholder</span></div></figure>
+        <figure class="receipt"><div class="receipt__ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15l3-3 3 3 4-5"/></svg><strong>Equity curve</strong><span>Results placeholder</span></div></figure>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
+      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+    </footer>
+  </div>
+</main>
+
+<!-- Live "just joined" toast (opt-in page only) -->
+<div class="toast is-out" id="toast" role="status" aria-live="polite">
+  <span class="avatar" id="toast-av">E</span>
+  <div>
+    <p><span class="tick">✓ Verified</span> · <b id="toast-name">Name</b> from <span id="toast-city">City</span> just joined the <b>free Discord</b></p>
+    <small>Just now</small>
+  </div>
+</div>
+
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<script>
+/* =======================================================================
+   EDIT ME — everything you'd normally swap lives here.
+   ======================================================================= */
+const CONFIG = {
+  // Google Sheets Web app URL (ends in /exec). See google-sheets/lead-capture.gs.
+  // Every page 1 opt-in is added as a row of the "Jean Ivan - Master Lead Sheet". Leave "" to send nothing.
+  leadSheetUrl: "",
+
+  brand: "Jean Ivan",
+  program: "Trading",
+  coach: "Jean Ivan",
+  spotsLeft: 3,
+  spotsFill: 88,               // % of the scarcity bar that's filled
+
+  // Paste an embed URL to replace a placeholder (YouTube/Vimeo/Wistia embed link or an .mp4).
+  videos: {
+    vsl: "",
+    nextSteps: "",
+    faqInside: "",
+    faqLegit: "",
+    faqWho: "",
+    faqTime: "",
+    faqCapital: ""
+  },
+
+  // A/B test for page 2: share of new opt-ins sent to /apply (V1). The rest go to /apply-2 (V2).
+  // Each visitor keeps the version they got. Add ?v=1 or ?v=2 to a link to force one for testing.
+  abSplitV1: 0.5,
+
+  // Calendly booking page shown on page 2. The "hide_*" options strip Calendly's own text.
+  calendlyUrl: "https://calendly.com/eliascroesus/jean-ivan-strategy-call?hide_event_type_details=1&hide_landing_page_details=1&hide_gdpr_banner=1",
+
+  // "Just joined" toast. PLACEHOLDER DATA — feed this from real opt-ins (your CRM / Discord bot)
+  // before going live; showing made-up sign-ups is deceptive and can break FTC/ad-platform rules.
+  // Set to [] to turn the toast off.
+  recentJoins: [
+    { name: "Elijah", city: "Phoenix" },
+    { name: "Marcus", city: "Atlanta" },
+    { name: "Daniel", city: "Toronto" },
+    { name: "Chris",  city: "Houston" },
+    { name: "Ryan",   city: "London" }
+  ]
+};
+
+// Page 2, version 2 questions (one at a time). type "choice" = pick one, "text" = short typed answer,
+// "long" = written answer that grows as they type (Shift+Enter for a new line).
+// "key" is the spreadsheet field: situation, goal, obstacles, instagram and investment have columns.
+const APPLY2_QUESTIONS = [
+  {
+    key: "situation", type: "choice",
+    title: "Which of these best describes your situation right now?",
+    options: ["I'm already trading and want to become consistently profitable", "I've been trying to trade and I'm stuck", "I'm completely new to trading"]
+  },
+  {
+    key: "goal", type: "long",
+    title: "What's your biggest goal for the next 6\u201112 months? (life, situation, income)",   // \u2011 keeps "6-12" on one line
+    placeholder: "Type your answer here..."
+  },
+  {
+    key: "obstacles", type: "long",
+    title: "What challenges or obstacles do you feel are holding you back from reaching that goal?",
+    placeholder: "Type your answer here..."
+  },
+  {
+    key: "instagram", type: "text",
+    title: "What's your Instagram?",
+    placeholder: "@handle"
+  },
+  {
+    key: "investment", type: "choice",
+    title: "In a world where this was a PERFECT fit and we knew without a doubt we could help you hit the goals you just mentioned, how much are you willing to invest into your trading and getting 1-on-1 coaching from Jean Ivan?",
+    help: "Full transparency is recommended. We'll help you either way.",
+    options: ["$1,000 – $3,000", "$3,000 – $5,000", "I have a 650+ credit score", "I want to, but don't have the resources to fund my goals"]
+  }
+];
+
+/* ======================================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// Fill brand / program / spots text
+$$("[data-fill]").forEach(el => { if (CONFIG[el.dataset.fill] != null) el.textContent = CONFIG[el.dataset.fill]; });
+$("#meter").style.setProperty("--fill", CONFIG.spotsFill + "%");
+
+// Swap placeholders for real embeds when a URL is configured
+$$(".video[data-video]").forEach(box => {
+  const url = CONFIG.videos[box.dataset.video];
+  if (!url) return;
+  box.innerHTML = /\.(mp4|webm|m3u8)(\?|$)/i.test(url)
+    ? `<video src="${url}" controls playsinline></video>`
+    : `<iframe src="${url}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+});
+$$(".video__play").forEach(btn => btn.addEventListener("click", () => btn.closest(".video").classList.toggle("is-playing")));
+$("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; });
+
+/* ---------- Pages: / → /apply or /apply-2 (A/B) → /booked ---------- */
+// On Vercel, vercel.json serves this same file at every path; the path picks the page.
+const PAGES = { "/": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked" };
+const PATHS = { optin: "/", apply: "/apply", apply2: "/apply-2", booked: "/booked" };
+// Old #apply / #booked links → the matching path.
+if (["#apply", "#booked"].includes(location.hash) && location.protocol !== "file:") {
+  location.replace(PATHS[location.hash.slice(1)] + location.search);
+}
+const VIEW = PAGES[location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1")] || "optin";
+// Keeps ?utm_… on every page (but not the ?v= test switch, so a reset only happens once).
+function go(view) {
+  const q = new URLSearchParams(location.search);
+  if (q.get("v") === "reset") q.delete("v");
+  const rest = q.toString();
+  location.assign(PATHS[view] + (rest ? "?" + rest : ""));
+}
+
+// A/B version for page 2. Decided once per visitor and remembered.
+// Testing: ?v=1 or ?v=2 forces a version; ?v=reset forgets it so the next opt-in is a fresh 50/50 draw.
+function abVersion() {
+  const param = new URLSearchParams(location.search).get("v");
+  if (param === "reset") { try { localStorage.removeItem("jeanivan_apply_version"); } catch {} }
+  const forced = { "1": "V1", "2": "V2" }[param];
+  let v = forced;
+  try { v = v || localStorage.getItem("jeanivan_apply_version"); } catch {}
+  if (v !== "V1" && v !== "V2") v = Math.random() < CONFIG.abSplitV1 ? "V1" : "V2";
+  try { localStorage.setItem("jeanivan_apply_version", v); } catch {}
+  return v;
+}
+const pageVersion = () => (VIEW === "apply2" ? "V2" : VIEW === "apply" ? "V1" : abVersion());
+
+function route() {
+  $$("[data-view]").forEach(v => { v.hidden = v.dataset.view !== VIEW; });
+  const page = $(`[data-view="${VIEW}"]`);
+  // Only the visible page's clips play, so the other pages' videos never download.
+  $$("video[data-autoplay]", page).forEach(v => { v.preload = "auto"; v.autoplay = true; v.play().catch(() => {}); });
+  if (VIEW === "apply") prefillApply();
+  if (VIEW === "apply2") initTypeform();
+  toast.active(VIEW === "optin");
+}
+
+/* ---------- Lead data (opt-in → application prefill) ---------- */
+let lead = store.get("lead") || {};
+const qs = new URLSearchParams(location.search);   // UTM-style prefill: ?name=&email=&phone=
+["name", "email", "phone"].forEach(k => { const v = qs.get(k) || (k === "name" && qs.get("first_name")); if (v) lead[k] = v; });
+
+function prefillApply() {
+  checkApply();
+  initCalendly($("#cal-embed"));   // start loading Calendly behind the blur right away
+}
+
+/* ---------- Send to the Google Sheet ---------- */
+// type "optin" adds a row; "application" and "booked" fill in that person's row (matched by email).
+function sendLead(data, type = "optin") {
+  if (!CONFIG.leadSheetUrl) return;
+  const body = new URLSearchParams({
+    version: pageVersion(),
+    ...data,
+    type,
+    funnel: document.title,
+    page_url: location.href.split("#")[0],
+    utm_source: qs.get("utm_source") || "",
+    utm_medium: qs.get("utm_medium") || "",
+    utm_campaign: qs.get("utm_campaign") || "",
+    utm_content: qs.get("utm_content") || "",
+    utm_term: qs.get("utm_term") || "",
+    referrer: document.referrer,
+    device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+  });
+  // Apps Script doesn't send CORS headers, so the response can't be read; "no-cors" still delivers the row.
+  fetch(CONFIG.leadSheetUrl, { method: "POST", mode: "no-cors", body, keepalive: true }).catch(() => {});
+}
+
+/* ---------- Opt-in form ---------- */
+const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+$("#optin-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.currentTarget;
+  const name = f.name.value.trim(), phone = f.phone.value.trim(), email = f.email.value.trim();
+  const bad = [];
+  f.name.setAttribute("aria-invalid", !name); if (!name) bad.push("your name");
+  f.phone.setAttribute("aria-invalid", phone.replace(/\D/g, "").length < 7); if (phone.replace(/\D/g, "").length < 7) bad.push("a phone number");
+  f.email.setAttribute("aria-invalid", !emailOk(email)); if (!emailOk(email)) bad.push("a valid email");
+  const err = $("#optin-error");
+  if (bad.length) { err.textContent = "Please add " + bad.join(", ") + "."; err.hidden = false; return; }
+  err.hidden = true;
+  lead = { name, email, phone: f.cc.value + " " + phone };
+  const version = abVersion();
+  sendLead({ ...lead, country: f.cc.selectedOptions[0]?.dataset.country || "", version });
+  store.set("lead", lead);
+  go(version === "V2" ? "apply2" : "apply");
+});
+$("#back-to-form").addEventListener("click", () => { $("#optin-form").scrollIntoView({ behavior: "smooth", block: "center" }); $("#o-name").focus({ preventScroll: true }); });
+
+/* ---------- Application form gates the Calendly booking ---------- */
+const applyForm = $("#apply-form");
+function checkApply() {
+  const ok = $$("[required]", applyForm).every(el => el.type === "radio"
+    ? !!applyForm.querySelector(`input[name="${el.name}"]:checked`)
+    : el.value.trim() && (el.type !== "email" || emailOk(el.value.trim())));
+  if (ok) queueApplication();
+  $("#cal-embed").classList.toggle("is-locked", !ok);
+  $("#cal-embed").inert = !ok;
+  $("#cal-lock").hidden = ok;
+  $("#st-form").classList.toggle("on", !ok);
+  $("#st-book").classList.toggle("on", ok);
+  return ok;
+}
+applyForm.addEventListener("input", checkApply);
+applyForm.addEventListener("change", checkApply);
+
+// Send the answers to the sheet once the form is complete (and again if they change),
+// waiting a moment so typing in the Instagram field doesn't send a row per keystroke.
+const applicationData = () => ({ ...lead, ...Object.fromEntries(new FormData(applyForm)) });
+let applicationSent = "", applicationTimer = null;
+function queueApplication() {
+  clearTimeout(applicationTimer);
+  applicationTimer = setTimeout(() => {
+    const data = applicationData(), key = JSON.stringify(data);
+    if (key === applicationSent) return;
+    applicationSent = key;
+    sendLead(data, "application");
+  }, 1500);
+}
+
+/* ---------- Custom dropdowns (open below the field on every browser) ---------- */
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const CHEV = '<svg class="dd__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+let openDropdown = null;
+$$("select[data-dropdown]").forEach(sel => {
+  const wrap = document.createElement("div");
+  wrap.className = "dd";
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+  sel.tabIndex = -1;
+  sel.setAttribute("aria-hidden", "true");
+
+  const label = document.querySelector(`label[for="${sel.id}"]`);
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "dd__btn";
+  btn.id = sel.id + "-btn";
+  btn.setAttribute("aria-haspopup", "listbox");
+  btn.setAttribute("aria-expanded", "false");
+  btn.innerHTML = `<span class="dd__value"></span>${CHEV}`;
+  if (label) { label.htmlFor = btn.id; btn.setAttribute("aria-labelledby", label.id = sel.id + "-label"); }
+
+  const list = document.createElement("ul");
+  list.className = "dd__list";
+  list.id = sel.id + "-list";
+  list.setAttribute("role", "listbox");
+  list.hidden = true;
+  const opts = [...sel.options].filter(o => o.value);
+  list.innerHTML = opts.map((o, i) => `<li class="dd__opt" role="option" id="${sel.id}-opt-${i}" data-i="${i}" aria-selected="false"><span>${o.text}</span>${CHECK}</li>`).join("");
+  wrap.append(btn, list);
+  const items = [...list.children];
+  let active = -1;
+
+  function render() {
+    const i = opts.findIndex(o => o.value === sel.value);
+    btn.querySelector(".dd__value").textContent = i >= 0 ? opts[i].text : sel.options[0].text;
+    btn.classList.toggle("is-empty", i < 0);
+    items.forEach((li, k) => li.setAttribute("aria-selected", String(k === i)));
+  }
+  function setActive(i) {
+    active = Math.max(0, Math.min(items.length - 1, i));
+    items.forEach((li, k) => li.classList.toggle("is-active", k === active));
+    items[active].scrollIntoView({ block: "nearest" });
+    btn.setAttribute("aria-activedescendant", items[active].id);
+  }
+  function open() {
+    if (openDropdown && openDropdown !== close) openDropdown();
+    list.hidden = false; wrap.classList.add("is-open"); btn.setAttribute("aria-expanded", "true");
+    setActive(Math.max(0, opts.findIndex(o => o.value === sel.value)));
+    openDropdown = close;
+  }
+  function close() {
+    list.hidden = true; wrap.classList.remove("is-open"); btn.setAttribute("aria-expanded", "false");
+    btn.removeAttribute("aria-activedescendant");
+    if (openDropdown === close) openDropdown = null;
+  }
+  function choose(i) {
+    sel.value = opts[i].value;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    render(); close(); btn.focus();
+  }
+  btn.addEventListener("click", () => (list.hidden ? open() : close()));
+  btn.addEventListener("keydown", e => {
+    const isOpen = !list.hidden;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (!isOpen) open(); else setActive(active + (e.key === "ArrowDown" ? 1 : -1)); }
+    else if ((e.key === "Enter" || e.key === " ") && isOpen) { e.preventDefault(); choose(active); }
+    else if (e.key === "Escape" && isOpen) { e.preventDefault(); close(); }
+    else if (e.key === "Tab" && isOpen) close();
+  });
+  sel.addEventListener("dd:sync", render);   // value set from outside (e.g. the matching radio)
+  list.addEventListener("mousedown", e => e.preventDefault());   // keep focus on the button
+  list.addEventListener("click", e => { const li = e.target.closest(".dd__opt"); if (li) choose(+li.dataset.i); });
+  list.addEventListener("mousemove", e => { const li = e.target.closest(".dd__opt"); if (li && +li.dataset.i !== active) setActive(+li.dataset.i); });
+  render();
+});
+document.addEventListener("click", e => { if (openDropdown && !e.target.closest(".dd.is-open")) openDropdown(); });
+
+// Keep the investment dropdown (stacked layout) and radios (side-by-side layout) in sync.
+const investSel = $("#a-invest");
+const investRadios = $$('input[name="investment"]', applyForm);
+investSel.addEventListener("change", () => { investRadios.forEach(r => { r.checked = r.value === investSel.value; }); });
+investRadios.forEach(r => r.addEventListener("change", () => { investSel.value = r.value; investSel.dispatchEvent(new Event("dd:sync")); }));
+
+/* ---------- Page 2, version 2: one question at a time ---------- */
+const tf = $("#tf"), tfForm = $("#tf-form");
+const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let tfIndex = 0, tfSteps = [], tfAdvanceTimer = null, tfSent = "";
+const typeformData = () => ({ ...lead, ...Object.fromEntries(new FormData(tfForm)) });
+
+function initTypeform() {
+  tfForm.innerHTML = APPLY2_QUESTIONS.map((q, i) => {
+    const id = "tf-" + q.key;
+    const field = q.type === "choice"
+      ? `<div class="tf__opts" role="radiogroup" aria-labelledby="${id}-title">${q.options.map((o, k) =>
+          `<label class="tf__opt"><input type="radio" name="${q.key}" value="${esc(o)}"><span class="tf__key">${String.fromCharCode(65 + k)}</span><span>${esc(o)}</span>${CHECK}</label>`).join("")}</div>`
+      : q.type === "long"
+        ? `<textarea class="tf__input" id="${id}" name="${q.key}" rows="1" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title"></textarea>`
+        : `<input class="tf__input" id="${id}" name="${q.key}" autocomplete="off" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title">`;
+    return `<div class="tf__step" data-i="${i}" hidden>
+      <div class="tf__head"><span class="tf__num">${i + 1}${ARROW}</span><h3 class="tf__title${q.title.length > 110 ? " tf__title--long" : ""}" id="${id}-title">${esc(q.title)} <span class="req">*</span></h3></div>
+      <div class="tf__body">
+        ${q.help ? `<p class="tf__help">${q.help}</p>` : ""}
+        ${field}
+        <p class="tf__err" role="alert" hidden></p>
+        <div class="tf__actions"><button type="button" class="tf__ok">OK ${CHECK}</button><span class="tf__hint">${q.type === "long" ? "<b>Shift ⇧ + Enter ↵</b> for a new line" : "press <b>Enter ↵</b>"}</span></div>
+      </div>
+    </div>`;
+  }).join("");
+  tfSteps = $$(".tf__step", tfForm);
+  tfShow(0);
+  initCalendly($("#tf-embed"));   // loads hidden now, so it's ready the moment the last answer is in
+}
+function tfValue(i) {
+  const q = APPLY2_QUESTIONS[i];
+  return q.type === "choice"
+    ? tfForm.querySelector(`input[name="${q.key}"]:checked`)?.value || ""
+    : tfForm.elements[q.key].value.trim();
+}
+function tfShow(i) {
+  clearTimeout(tfAdvanceTimer);
+  tfIndex = i;
+  tfSteps.forEach((st, k) => { st.hidden = k !== i; st.classList.toggle("is-in", k === i); });
+  $("#tf-bar").style.width = (i / APPLY2_QUESTIONS.length) * 100 + "%";
+  $("#tf-prev").disabled = i === 0;
+  const input = tfSteps[i].querySelector(".tf__input");
+  if (input && matchMedia("(hover: hover)").matches) input.focus({ preventScroll: true });
+}
+function tfNext() {
+  const q = APPLY2_QUESTIONS[tfIndex], err = tfSteps[tfIndex].querySelector(".tf__err");
+  if (!tfValue(tfIndex)) {
+    err.textContent = q.type === "choice" ? "Please pick an answer." : "Please fill this in.";
+    err.hidden = false;
+    return;
+  }
+  err.hidden = true;
+  // Save each answer as it's given, so drop-offs show in the sheet (skipped if nothing changed).
+  const data = typeformData(), key = JSON.stringify(data);
+  if (key !== tfSent) { tfSent = key; sendLead(data, "application"); }
+  if (tfIndex < APPLY2_QUESTIONS.length - 1) tfShow(tfIndex + 1);
+  else tfFinish();
+}
+function tfFinish() {
+  $("#tf-bar").style.width = "100%";
+  tf.classList.add("is-done");
+  const cal = $("#tf-cal");
+  cal.classList.remove("is-waiting");
+  cal.inert = false;
+  tf.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+tfForm.addEventListener("submit", e => e.preventDefault());
+tfForm.addEventListener("click", e => { if (e.target.closest(".tf__ok")) tfNext(); });
+tfForm.addEventListener("change", e => {
+  const opt = e.target.closest(".tf__opt");
+  if (!opt) return;
+  opt.classList.remove("is-picked"); void opt.offsetWidth; opt.classList.add("is-picked");
+  tfSteps[tfIndex].querySelector(".tf__err").hidden = true;
+  clearTimeout(tfAdvanceTimer);
+  tfAdvanceTimer = setTimeout(tfNext, 450);   // choices move on by themselves, like Typeform
+});
+tfForm.addEventListener("input", e => {
+  tfSteps[tfIndex].querySelector(".tf__err").hidden = true;
+  if (e.target.matches("textarea")) { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; }   // grow with the answer
+});
+$("#tf-prev").addEventListener("click", () => { if (tfIndex > 0) tfShow(tfIndex - 1); });
+$("#tf-next").addEventListener("click", tfNext);
+document.addEventListener("keydown", e => {
+  if (VIEW !== "apply2" || tf.classList.contains("is-done") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const q = APPLY2_QUESTIONS[tfIndex];
+  if (e.key === "Enter" && e.shiftKey && e.target.matches("textarea")) return;   // new line in a written answer
+  if (e.key === "Enter" && tf.contains(document.activeElement) && !document.activeElement.matches("button")) { e.preventDefault(); tfNext(); return; }
+  if (e.key === "Enter" && document.activeElement === document.body && tfValue(tfIndex)) { e.preventDefault(); tfNext(); return; }
+  // A, B, C… pick an option when you're not typing somewhere
+  if (q.type === "choice" && /^[a-z]$/i.test(e.key) && !e.target.closest("input:not([type=radio]), textarea")) {
+    const radio = $$(`input[name="${q.key}"]`, tfForm)[e.key.toUpperCase().charCodeAt(0) - 65];
+    if (radio) { radio.checked = true; radio.dispatchEvent(new Event("change", { bubbles: true })); }
+  }
+});
+
+/* ---------- Calendly ---------- */
+// Name and email come from the page 1 opt-in (or ?name=&email= in the link).
+function calendlyPrefill() {
+  const name = (lead.name || "").trim().replace(/\s+/g, " ");
+  const [firstName, ...rest] = name.split(" ");
+  // Send both forms so the name fills in whether the event asks for "Name" or "First / Last name".
+  return { name, firstName, lastName: rest.join(" "), email: (lead.email || "").trim() };
+}
+function initCalendly(el) {
+  if (!el) return;
+  if (!window.Calendly) { setTimeout(() => initCalendly(el), 300); return; }   // widget.js loads async
+  const prefill = calendlyPrefill();
+  const key = prefill.name + "|" + prefill.email;
+  if (key === el.dataset.calKey) return;
+  el.dataset.calKey = key;
+  el.innerHTML = "";
+  Calendly.initInlineWidget({ url: CONFIG.calendlyUrl, parentElement: el, prefill });
+}
+// Calendly tells the page when a call is booked; then move on to page 3.
+window.addEventListener("message", e => {
+  if (e.origin !== "https://calendly.com" || e.data?.event !== "calendly.event_scheduled") return;
+  const answers = VIEW === "apply2" ? typeformData() : applicationData();
+  store.set("booking", { ...answers, bookedAt: Date.now() });
+  sendLead(answers, "booked");
+  setTimeout(() => go("booked"), 1500);
+});
+
+/* ---------- "Just joined" toast ---------- */
+const toast = (() => {
+  const el = $("#toast"), list = CONFIG.recentJoins;
+  let i = 0, timer = null;
+  function show() {
+    const p = list[i++ % list.length];
+    $("#toast-name").textContent = p.name;
+    $("#toast-city").textContent = p.city;
+    $("#toast-av").textContent = p.name[0];
+    el.classList.remove("is-out");
+    timer = setTimeout(() => { el.classList.add("is-out"); timer = setTimeout(show, 7000); }, 5000);
+  }
+  return {
+    active(on) {
+      clearTimeout(timer); el.classList.add("is-out");
+      if (on && list.length) timer = setTimeout(show, 2500);
+    }
+  };
+})();
+
+route();
+</script>
+</body>
+</html>
