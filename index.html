@@ -105,13 +105,8 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 }
 .sub--big { font-size: clamp(1.5rem, 4.2vw, 2.3rem); line-height: 1.2; max-width: 32ch; }
 @media (min-width: 420px) { .sub--big .hl { white-space: nowrap; } }
-.br-wide { display: none; }
-/* Wide screens: exactly two lines, with the font scaled so the longer line
-   ("Blown Accounts & Strategies That Fail?", about 22em wide) fits the column. */
-@media (min-width: 760px) {
-  .br-wide { display: inline; }
-  .sub--big { max-width: none; white-space: nowrap; font-size: min(2.3rem, calc((min(100vw, 880px) - 56px) / 23)); }
-}
+/* Wide screens: headings marked data-fit stay on one line; fitHeadings() shrinks the font until they fit. */
+@media (min-width: 761px) { [data-fit] { max-width: none; white-space: nowrap; } }
 .step {
   font-size: clamp(1.1rem, 2.8vw, 1.6rem);
   font-weight: 800;
@@ -119,6 +114,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
   line-height: 1.25;
 }
 .step b { color: var(--accent); font-weight: 800; }
+.nowrap { white-space: nowrap; }
 .warn {
   display: inline-flex; align-items: center; gap: 10px;
   font-size: clamp(1.05rem, 2.6vw, 1.5rem);
@@ -707,9 +703,9 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <main class="view" id="view-apply" data-view="apply" hidden>
   <div class="wrap">
 
-    <h1 class="sub">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
-    <h2 class="sub sub--big">Do You Want To <span class="hl">Break Free</span> From<br class="br-wide"> <span class="hl">Blown Accounts</span> &amp; <span class="hl">Strategies That&nbsp;Fail?</span></h2>
-    <h2 class="step"><b>Step #1</b> Watch This Video To See The <b>Exact Strategy</b> I Use To <b>Trade The Markets</b>.</h2>
+    <h1 class="sub" data-fit>Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
+    <h2 class="sub sub--big" data-fit>Do You Want To <span class="hl">Break Free</span> From <span class="hl">Strategy Hopping</span> &amp; <span class="hl">Emotional Trading?</span></h2>
+    <h2 class="step" data-fit><b>Step #1</b> Watch This Video To <b>Stop</b> The Cycle Once And For All.</h2>
 
     <div class="video" data-video="vsl">
       <div class="video__ph">
@@ -721,7 +717,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       <div class="video__bar"><span></span></div>
     </div>
 
-    <h2 class="step"><b>Step #2</b> Fill Out This Application To Apply For The 1-1 <span data-fill="program">Trading</span> Mentorship</h2>
+    <h2 class="step" data-fit><b>Step #2</b> Fill Out This Application To Apply For The <span class="nowrap">1-1</span> <span data-fill="program">Consistency Code</span> Mentorship</h2>
 
     <section class="card booker" aria-label="Strategy call application">
       <div class="booker__steps">
@@ -809,9 +805,9 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <main class="view" id="view-apply2" data-view="apply2" hidden>
   <div class="wrap">
 
-    <h1 class="sub">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
-    <h2 class="sub sub--big">Do You Want To <span class="hl">Break Free</span> From<br class="br-wide"> <span class="hl">Blown Accounts</span> &amp; <span class="hl">Strategies That&nbsp;Fail?</span></h2>
-    <h2 class="step"><b>Step #1</b> Watch This Video To See The <b>Exact Strategy</b> I Use To <b>Trade The Markets</b>.</h2>
+    <h1 class="sub" data-fit>Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
+    <h2 class="sub sub--big" data-fit>Do You Want To <span class="hl">Break Free</span> From <span class="hl">Strategy Hopping</span> &amp; <span class="hl">Emotional Trading?</span></h2>
+    <h2 class="step" data-fit><b>Step #1</b> Watch This Video To <b>Stop</b> The Cycle Once And For All.</h2>
 
     <div class="video" data-video="vsl">
       <div class="video__ph">
@@ -823,7 +819,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       <div class="video__bar"><span></span></div>
     </div>
 
-    <h2 class="step"><b>Step #2</b> Fill Out This Application To Apply For The 1-1 <span data-fill="program">Trading</span> Mentorship</h2>
+    <h2 class="step" data-fit><b>Step #2</b> Fill Out This Application To Apply For The <span class="nowrap">1-1</span> <span data-fill="program">Consistency Code</span> Mentorship</h2>
 
     <section class="card tf" id="tf" aria-label="Strategy call application">
       <div class="tf__progress" aria-hidden="true"><span id="tf-bar"></span></div>
@@ -885,7 +881,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 
     <div class="faqs">
       <section class="faq">
-        <h3>What's Inside The <span data-fill="program">Trading</span> Mentorship?</h3>
+        <h3>What's Inside The <span data-fill="program">Consistency Code</span> Mentorship?</h3>
         <div class="video" data-video="faqInside">
           <div class="video__ph">
             <span class="video__tag">Video placeholder</span>
@@ -978,7 +974,7 @@ const CONFIG = {
   leadSheetUrl: "https://script.google.com/macros/s/AKfycbz5Kit_1dN9WRHCtjC8Idq49u2c5Rr9KMBf1MVEqUjxsxbIX2DWplN-WWwAhCSNyPob/exec",
 
   brand: "Jean Ivan",
-  program: "Trading",
+  program: "Consistency Code",   // mentorship name: "Apply For The 1-1 Consistency Code Mentorship"
   coach: "Jean Ivan",
   spotsLeft: 3,
   spotsFill: 88,               // % of the scarcity bar that's filled
@@ -1104,10 +1100,31 @@ function route() {
   const page = $(`[data-view="${VIEW}"]`);
   // Only the visible page's clips play, so the other pages' videos never download.
   $$("video[data-autoplay]", page).forEach(v => { v.preload = "auto"; v.autoplay = true; v.play().catch(() => {}); });
+  fitHeadings();
   if (VIEW === "apply") prefillApply();
   if (VIEW === "apply2") initTypeform();
   toast.active(VIEW === "optin");
 }
+
+/* ---------- One-line headings ---------- */
+// From 761px wide, headings marked data-fit stay on one line and shrink just enough to fit the column.
+// Phones wrap them as usual.
+const fitWide = matchMedia("(min-width: 761px)");
+function fitHeadings() {
+  $$("[data-fit]").forEach(el => {
+    el.style.fontSize = "";
+    if (!fitWide.matches || !el.offsetParent) return;
+    const cs = getComputedStyle(el.parentElement);
+    const room = el.parentElement.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    if (el.scrollWidth <= room) return;
+    size = Math.floor(size * room / el.scrollWidth * 10) / 10;   // text width scales with font size
+    el.style.fontSize = size + "px";
+    while (el.scrollWidth > room && size > 12) el.style.fontSize = (size -= .5) + "px";
+  });
+}
+window.addEventListener("resize", fitHeadings);
+document.fonts?.ready.then(fitHeadings);   // web fonts are wider than the fallback
 
 /* ---------- Lead data (opt-in → application prefill) ---------- */
 let lead = store.get("lead") || {};
