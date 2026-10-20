@@ -100,7 +100,8 @@ a { color: inherit; }
 
 
 /* ---------- Type ---------- */
-h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-align: center; }
+/* position: relative draws headings above the shadow of the video or card just before them. */
+h1, h2, h3 { position: relative; font-family: var(--display); margin: 0; text-wrap: balance; text-align: center; }
 .headline {
   font-size: clamp(1.7rem, 4.4vw, 2.6rem);
   font-weight: 800;
