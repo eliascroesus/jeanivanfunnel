@@ -47,6 +47,8 @@ html:not([data-page="booked"]) #view-booked { display: none; }
   --ph: #0f2a1c;           /* video placeholder fill */
   --ph-line: rgba(74, 222, 128, .12);
 
+  --form-text: 1rem;       /* every question, answer and dropdown option in the forms */
+
   --display: "Montserrat", "Arial Black", "Helvetica Neue", Arial, sans-serif;
   --body: "DM Sans", "Helvetica Neue", Arial, sans-serif;
 
@@ -168,11 +170,11 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .optin h2 svg { width: 1.1em; height: 1.1em; color: var(--deep); }
 
 .field { display: grid; gap: 4px; }
-.field label { font-size: .82rem; font-weight: 700; line-height: 1.5; color: var(--card-ink); }
+.field label { font-size: var(--form-text); font-weight: 700; line-height: 1.5; color: var(--card-ink); }
 .field label .req { color: var(--danger); }
 .input, .select {
   width: 100%;
-  font: inherit; font-size: .95rem;
+  font: inherit; font-size: var(--form-text);
   color: var(--card-ink);
   background: var(--field);
   border: 1px solid var(--line);
@@ -189,7 +191,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .dd__btn {
   width: 100%; min-height: 46px;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  font: inherit; font-size: .95rem; text-align: left;
+  font: inherit; font-size: var(--form-text); text-align: left;
   color: var(--card-ink); background: var(--field);
   border: 1px solid var(--line); border-radius: 10px;
   padding: 11px 14px; cursor: pointer;
@@ -211,7 +213,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .dd__opt {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 12px; border-radius: 8px;
-  font-size: .93rem; color: var(--card-ink); cursor: pointer;
+  font-size: var(--form-text); color: var(--card-ink); cursor: pointer;
 }
 .dd__opt.is-active { background: #ebf7f0; }
 .dd__opt[aria-selected="true"] { color: var(--deep); font-weight: 700; }
@@ -379,7 +381,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .booker__steps .on { color: var(--card-ink); font-weight: 700; }
 .booker__steps .on i { background: var(--card-ink); }
 .booker__body { display: grid; grid-template-columns: 1fr 1fr; }
-.booker__form { padding: 20px; display: grid; gap: 12px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
+.booker__form { padding: 20px; display: grid; gap: 14px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
 .booker__form h3 { text-align: left; font-size: 1.1rem; font-weight: 800; }
 .booker__cal { position: relative; min-width: 0; min-height: 700px; }
 .cal-embed { height: 700px; transition: filter .3s ease; }
