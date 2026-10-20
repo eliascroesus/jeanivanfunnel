@@ -168,8 +168,8 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .optin h2 svg { width: 1.1em; height: 1.1em; color: var(--deep); }
 
 .field { display: grid; gap: 4px; }
-.field label, .field__q { font-size: .82rem; font-weight: 700; line-height: 1.5; color: var(--card-ink); }
-.field label .req, .field__q .req { color: var(--danger); }
+.field label { font-size: .82rem; font-weight: 700; line-height: 1.5; color: var(--card-ink); }
+.field label .req { color: var(--danger); }
 .input, .select {
   width: 100%;
   font: inherit; font-size: .95rem;
@@ -183,30 +183,6 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
 .input::placeholder { color: #93a99b; }
 .input:focus, .select:focus { outline: none; border-color: var(--deep); box-shadow: 0 0 0 3px rgba(11, 79, 46, .15); }
 .input[aria-invalid="true"] { border-color: var(--danger); }
-/* Radio choices (investment question) */
-.choices__grid { display: grid; gap: 8px; margin-top: 2px; }
-.choice {
-  position: relative;
-  display: flex; align-items: center; gap: 10px;
-  min-height: 46px; padding: 10px 12px;
-  background: var(--field); border: 1px solid var(--line); border-radius: 10px;
-  font-size: .93rem; font-weight: 500; color: var(--card-ink); cursor: pointer;
-  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
-}
-.field .choice { font-size: .93rem; font-weight: 500; color: var(--card-ink); }   /* beat ".field label" */
-.choice:hover { border-color: #c0d4c7; }
-.choice input {
-  appearance: none; -webkit-appearance: none; margin: 0; flex: none;
-  width: 18px; height: 18px; border-radius: 50%;
-  border: 2px solid #b3c7ba; background: var(--card);
-  display: grid; place-items: center; cursor: pointer;
-}
-.choice input::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--deep); transform: scale(0); transition: transform .15s ease; }
-.choice input:checked { border-color: var(--deep); }
-.choice input:checked::after { transform: scale(1); }
-.field .choice:has(input:checked) { border-color: var(--deep); background: #ebf7f0; font-weight: 700; color: var(--deep); }
-.choice:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(11, 79, 46, .2); }
-
 /* Custom dropdown: the real <select> stays in the form (hidden) and holds the value. */
 .dd { position: relative; }
 .dd select { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
@@ -231,6 +207,7 @@ h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; text-al
   box-shadow: 0 16px 40px rgba(15, 31, 23, .18);
   max-height: 280px; overflow-y: auto;
 }
+.dd.is-up .dd__list { top: auto; bottom: calc(100% + 6px); }   /* not enough room below inside the card */
 .dd__opt {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 12px; border-radius: 8px;
@@ -610,9 +587,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 .toast small { color: var(--muted); }
 .tick { color: #4ade80; font-weight: 700; }
 
-@media (min-width: 761px) { .only-stacked { display: none; } }
 @media (max-width: 760px) {
-  .only-wide { display: none; }
   .booker__body { grid-template-columns: 1fr; }
   .booker__form { border-right: 0; border-bottom: 1px solid var(--line); }
 }
@@ -733,31 +708,29 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
             <input class="input" id="a-ig" name="instagram" autocomplete="off" placeholder="@handle" required>
           </div>
           <div class="field">
-            <label for="a-exp">Where Are You At With Trading? <span class="req">*</span></label>
+            <label for="a-exp">What Is Your Experience As A Trader? <span class="req">*</span></label>
             <select class="select" data-dropdown id="a-exp" name="experience" required>
               <option value="">Select</option>
-              <option>Brand new, haven't placed a trade yet</option>
-              <option>I've traded a bit but I'm not consistent</option>
-              <option>I'm trading but losing money</option>
-              <option>I'm profitable and want to scale</option>
+              <option>Complete beginner, haven't started yet</option>
+              <option>Less than 1 year</option>
+              <option>1–3 years</option>
+              <option>3+ years</option>
             </select>
           </div>
           <div class="field">
-            <label for="a-reason">What's The Main Thing Stopping You Right Now? <span class="req">*</span></label>
-            <select class="select" data-dropdown id="a-reason" name="reason" required>
+            <label for="a-why">What Is The Main Reason You Want To Fix Your Trading? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-why" name="motivation" required>
               <option value="">Select</option>
-              <option>I don't have a strategy that works</option>
-              <option>I keep losing money or blowing accounts</option>
-              <option>I can't control my emotions (fear, greed, revenge trading)</option>
-              <option>I've wasted money on courses and signals that didn't help</option>
-              <option>I don't have much time with my job</option>
+              <option>To replace my 9–5 income</option>
+              <option>To get funded and pass prop firm challenges</option>
+              <option>To make extra income on the side</option>
+              <option>To stop losing money and finally be consistent</option>
+              <option>To build long-term wealth</option>
             </select>
           </div>
-          <!-- Investment: radio buttons when the calendar sits beside the form, a dropdown when it stacks.
-               Both stay in sync; the radios carry the form value. -->
-          <div class="field only-stacked">
-            <label for="a-invest">How much have you set aside to invest in yourself and your trading? <span class="req">*</span></label>
-            <select class="select" data-dropdown id="a-invest">
+          <div class="field">
+            <label for="a-invest">How much do you have saved up to invest in yourself, funded accounts, and your trading journey? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-invest" name="investment" required>
               <option value="">Select</option>
               <option>Under $500</option>
               <option>$500 – $1,500</option>
@@ -766,15 +739,27 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
               <option>$5,000+</option>
             </select>
           </div>
-          <div class="field choices only-wide">
-            <span class="field__q" id="invest-q">How much have you set aside to invest in yourself and your trading? <span class="req">*</span></span>
-            <div class="choices__grid" role="radiogroup" aria-labelledby="invest-q">
-              <label class="choice"><input type="radio" name="investment" value="Under $500" required><span>Under $500</span></label>
-              <label class="choice"><input type="radio" name="investment" value="$500 – $1,500"><span>$500 – $1,500</span></label>
-              <label class="choice"><input type="radio" name="investment" value="$1,500 – $3,000"><span>$1,500 – $3,000</span></label>
-              <label class="choice"><input type="radio" name="investment" value="$3,000 – $5,000"><span>$3,000 – $5,000</span></label>
-              <label class="choice"><input type="radio" name="investment" value="$5,000+"><span>$5,000+</span></label>
-            </div>
+          <div class="field">
+            <label for="a-reason">What Is The Biggest Issue With Your Trading Right Now? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-reason" name="reason" required>
+              <option value="">Select</option>
+              <option>I don't have a strategy that works</option>
+              <option>I keep losing money or blowing accounts</option>
+              <option>Emotions: fear, greed and revenge trading</option>
+              <option>I keep jumping from strategy to strategy</option>
+              <option>I keep failing prop firm challenges</option>
+              <option>I don't have enough time to trade</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="a-ready">Are you ready to fix the issue in your previous answer? <span class="req">*</span></label>
+            <select class="select" data-dropdown id="a-ready" name="ready" required>
+              <option value="">Select</option>
+              <option>Yes, I'm ready to start now</option>
+              <option>Yes, in the next few weeks</option>
+              <option>I'm not sure yet</option>
+              <option>No, I'm just looking</option>
+            </select>
           </div>
         </form>
 
@@ -1267,11 +1252,15 @@ $$("select[data-dropdown]").forEach(sel => {
   function open() {
     if (openDropdown && openDropdown !== close) openDropdown();
     list.hidden = false; wrap.classList.add("is-open"); btn.setAttribute("aria-expanded", "true");
+    // The card clips anything past its edge, so open upwards when the list would run off its bottom.
+    const card = wrap.closest(".card");
+    wrap.classList.remove("is-up");
+    wrap.classList.toggle("is-up", !!card && list.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom - 8);
     setActive(Math.max(0, opts.findIndex(o => o.value === sel.value)));
     openDropdown = close;
   }
   function close() {
-    list.hidden = true; wrap.classList.remove("is-open"); btn.setAttribute("aria-expanded", "false");
+    list.hidden = true; wrap.classList.remove("is-open", "is-up"); btn.setAttribute("aria-expanded", "false");
     btn.removeAttribute("aria-activedescendant");
     if (openDropdown === close) openDropdown = null;
   }
@@ -1295,12 +1284,6 @@ $$("select[data-dropdown]").forEach(sel => {
   render();
 });
 document.addEventListener("click", e => { if (openDropdown && !e.target.closest(".dd.is-open")) openDropdown(); });
-
-// Keep the investment dropdown (stacked layout) and radios (side-by-side layout) in sync.
-const investSel = $("#a-invest");
-const investRadios = $$('input[name="investment"]', applyForm);
-investSel.addEventListener("change", () => { investRadios.forEach(r => { r.checked = r.value === investSel.value; }); });
-investRadios.forEach(r => r.addEventListener("change", () => { investSel.value = r.value; investSel.dispatchEvent(new Event("dd:sync")); }));
 
 /* ---------- Page 2, version 2: one question at a time ---------- */
 const tf = $("#tf"), tfForm = $("#tf-form");

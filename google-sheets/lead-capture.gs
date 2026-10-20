@@ -2,7 +2,8 @@
  * Lead capture for Jean Ivan's trading funnel.
  *   - Page 1 opt-in        → adds a new row (name, email, phone, tracking, A/B version).
  *   - Page 2 application   → fills that person's answers into their row (matched by email).
- *                            V1 (/apply) fills Instagram, Experience, Main Problem, Investment;
+ *                            V1 (/apply) fills Instagram, Experience, Main Reason, Investment,
+ *                            Main Problem (biggest issue), Ready To Fix;
  *                            V2 (/apply-2) fills Situation, Biggest Goal, Obstacles, Instagram, Investment.
  *   - Calendly booking     → stamps "Call Booked At" on their row.
  *
@@ -52,6 +53,8 @@ const COLUMNS = [
   ['Situation', 'situation'],
   ['Biggest Goal', 'goal'],
   ['Obstacles', 'obstacles'],
+  ['Main Reason', 'motivation'],
+  ['Ready To Fix', 'ready'],
 ];
 const HEADERS = COLUMNS.map(([header]) => header);
 const EMAIL_COL = COLUMNS.findIndex(([, field]) => field === 'email');

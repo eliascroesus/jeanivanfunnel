@@ -30,7 +30,7 @@ time are then filled into that person's row, matched by email:
 | Page | Columns filled |
 | --- | --- |
 | Opt-in (`/`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
-| V1 (`/apply`) | Instagram, Experience, Main Problem, Investment, Application At |
+| V1 (`/apply`) | Instagram, Experience, Main Reason, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
 | V2 (`/apply-2`) | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
 | Calendly booking | Call Booked At |
 
