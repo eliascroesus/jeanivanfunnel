@@ -116,6 +116,9 @@ h1, h2, h3 { position: relative; font-family: var(--display); margin: 0; text-wr
 }
 /* Wide screens: headings marked data-fit stay on one line; fitHeadings() shrinks the font until they fit. */
 @media (min-width: 761px) { [data-fit] { max-width: none; white-space: nowrap; } }
+/* Phones: fill each line to the full column width instead of evening the lines out (balance), which left
+   the 3-line title much narrower than the Step lines. */
+@media (max-width: 760px) { [data-fit] { text-wrap: wrap; } }
 .step {
   color: #fff;
   font-size: clamp(1.1rem, 2.8vw, 1.6rem);
@@ -685,8 +688,8 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <main class="view" id="view-apply" data-view="apply" hidden>
   <div class="wrap">
 
-    <h1 class="sub intro" data-fit="intro">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
-    <h2 class="sub intro" data-fit="intro">The <span class="hl">Real Reason</span> You Keep Losing Funded Accounts <span class="hl">(It’s Not Your&nbsp;Strategy)</span></h2>
+    <h1 class="sub intro" data-fit="intro">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord&nbsp;Access…</h1>
+    <h2 class="sub intro" data-fit="intro">The <span class="hl">Real Reason</span> You Keep Losing Funded Accounts <span class="hl">(It’s&nbsp;Not&nbsp;Your&nbsp;Strategy)</span></h2>
     <h2 class="step intro" data-fit="intro"><b>Step #1:</b> Watch How I <b>Fixed It</b> And Went On To Collect <b>$100k+ In&nbsp;Payouts</b></h2>
 
     <div class="video" data-video="vsl">
@@ -794,8 +797,8 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <main class="view" id="view-apply2" data-view="apply2" hidden>
   <div class="wrap">
 
-    <h1 class="sub intro" data-fit="intro">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord Access…</h1>
-    <h2 class="sub intro" data-fit="intro">The <span class="hl">Real Reason</span> You Keep Losing Funded Accounts <span class="hl">(It’s Not Your&nbsp;Strategy)</span></h2>
+    <h1 class="sub intro" data-fit="intro">Check Your <span class="hl">Email</span> + <span class="hl">SMS</span> For Discord&nbsp;Access…</h1>
+    <h2 class="sub intro" data-fit="intro">The <span class="hl">Real Reason</span> You Keep Losing Funded Accounts <span class="hl">(It’s&nbsp;Not&nbsp;Your&nbsp;Strategy)</span></h2>
     <h2 class="step intro" data-fit="intro"><b>Step #1:</b> Watch How I <b>Fixed It</b> And Went On To Collect <b>$100k+ In&nbsp;Payouts</b></h2>
 
     <div class="video" data-video="vsl">
