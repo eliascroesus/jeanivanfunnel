@@ -7,6 +7,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://assets.calendly.com">
+<link rel="preconnect" href="https://calendly.com">
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
 <script>
   // Pick the page from the URL before anything draws, so /apply never flashes page 1.
@@ -490,7 +493,9 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
   .tf__cal .cal-embed { --cal-crop-top: 66px; }
   .tf__cal .cal-embed iframe { display: block; margin-top: calc(-1 * var(--cal-crop-top)); height: calc(100% + var(--cal-crop-top)) !important; }
 }
-.tf__cal.is-waiting { position: absolute; left: 0; right: 0; top: 4px; visibility: hidden; pointer-events: none; }
+/* While the questions are on screen, Calendly sits behind them fully see-through. Not visibility: hidden:
+   browsers pause drawing inside hidden frames, so it would only finish loading once shown. */
+.tf__cal.is-waiting { position: absolute; left: 0; right: 0; top: 4px; opacity: 0; pointer-events: none; }
 .tf__calhead {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line);
@@ -815,7 +820,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
         <button type="button" id="tf-prev" aria-label="Previous question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
         <button type="button" id="tf-next" aria-label="Next question"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
       </div>
-      <!-- Calendly loads here (hidden) as soon as the page opens, and shows once the last answer is in -->
+      <!-- Calendly loads here (see-through, behind the questions) as soon as the page opens, and shows once the last answer is in -->
       <div class="tf__cal is-waiting" id="tf-cal" inert>
         <p class="tf__calhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Application done. Last step: pick a time for your call.</p>
         <div class="cal-embed" id="tf-embed"></div>
@@ -950,7 +955,6 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
   </div>
 </div>
 
-<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 <script>
 /* =======================================================================
    EDIT ME — everything you'd normally swap lives here.
