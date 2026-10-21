@@ -1,0 +1,4 @@
+# keep the trading research and the HIVEMIND app out of the public site deploy
+hivemind/
+research_notes/
+reports/
