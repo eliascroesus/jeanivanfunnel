@@ -2,7 +2,8 @@
 
 Trading funnel. All pages live in one file, `index.html`; the URL picks the page:
 
-1. **Opt-in** (`/`): headline, Discord sign-up form and Jean Ivan's results.
+1. **Opt-in** (`/discord`): headline, Discord sign-up form and Jean Ivan's results. For now the bare domain (`/`)
+   redirects to `/waitlist` (the `redirects` entry in `vercel.json`; delete it, or change its destination, to undo).
 2. **Application**, A/B tested. Each new opt-in is sent to one of two versions at random (50/50, set by
    `abSplitV1` in `CONFIG`) and keeps that version if they come back:
    - **V1** (`/apply`): main video, a short form beside Calendly.
@@ -17,7 +18,7 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
    waiting list". Asks for name, email and phone first unless page 1 already has them. Its rows show
    **Waitlist** in the sheet's Version column; "don't qualify" answers go to `/not-qualified` as on `/apply-2`.
 
-`vercel.json` serves `index.html` at `/apply`, `/apply-2`, `/booked`, `/not-qualified` and `/waitlist`. Images and clips go in
+`vercel.json` serves `index.html` at `/discord`, `/apply`, `/apply-2`, `/booked`, `/not-qualified` and `/waitlist`. Images and clips go in
 `assets/jean-ivan/`. Testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that
 folder's README). The page uses compressed copies in `assets/jean-ivan/proof/`, listed in `PROOF` in the script:
 Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`), each with a small `NAME.webp`
@@ -37,7 +38,7 @@ time are then filled into that person's row, matched by email:
 
 | Page | Columns filled |
 | --- | --- |
-| Opt-in (`/`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
+| Opt-in (`/discord`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
 | V1 (`/apply`) | Instagram, Experience, Main Reason, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
 | V2 (`/apply-2`) | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
 | Calendly booking | Call Booked At |

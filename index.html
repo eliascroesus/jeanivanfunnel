@@ -14,13 +14,13 @@
 <meta property="og:site_name" content="Jean FX Trading">
 <meta property="og:title" content="The SMC Strategy Behind $100K+ In Prop Firm Payouts">
 <meta property="og:description" content="Not signals: a full mentorship. Video course, 1-on-1 mentorship and a private Discord.">
-<meta property="og:url" content="https://jeanivanfunnel.vercel.app/">
-<meta property="og:image" content="https://jeanivanfunnel.vercel.app/og-image.jpg">
+<meta property="og:url" content="https://jeanfx.vercel.app/">
+<meta property="og:image" content="https://jeanfx.vercel.app/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Jean FX Trading: the SMC strategy behind $100K+ in prop firm payouts">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://jeanivanfunnel.vercel.app/og-image.jpg">
+<meta name="twitter:image" content="https://jeanfx.vercel.app/og-image.jpg">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,8 +31,10 @@
 <script>
   // Pick the page from the URL before anything draws, so /apply never flashes page 1.
   (function () {
-    var pages = { "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
+    var pages = { "/discord": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
     var path = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1");
+    // "/" sends people to the waiting list for now (vercel.json does this before the page loads; this is the backup).
+    if (path === "/" && location.protocol !== "file:") location.replace("/waitlist" + location.search);
     document.documentElement.setAttribute("data-page", pages[path] || "optin");
   })();
 </script>
@@ -1187,8 +1189,8 @@ $("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; })
 
 /* ---------- Pages: / → /apply or /apply-2 (A/B) → /booked ---------- */
 // On Vercel, vercel.json serves this same file at every path; the path picks the page.
-const PAGES = { "/": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
-const PATHS = { optin: "/", apply: "/apply", apply2: "/apply-2", booked: "/booked", notqualified: "/not-qualified", waitlist: "/waitlist" };
+const PAGES = { "/discord": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
+const PATHS = { optin: "/discord", apply: "/apply", apply2: "/apply-2", booked: "/booked", notqualified: "/not-qualified", waitlist: "/waitlist" };
 // Old #apply / #booked links → the matching path.
 if (["#apply", "#booked"].includes(location.hash) && location.protocol !== "file:") {
   location.replace(PATHS[location.hash.slice(1)] + location.search);
