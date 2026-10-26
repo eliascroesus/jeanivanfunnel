@@ -13,8 +13,11 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
 4. **Not qualified** (`/not-qualified`): where applicants land instead of the calendar when their investment
    answer is in `CONFIG.disqualify` ("Under $500" on V1, "don't have the resources" on V2). Their answers still
    go to the sheet. Put the Discord invite in `CONFIG.discordUrl` to show a "Join The Free Discord" button.
+5. **Waiting list** (`/waitlist`): the `/apply-2` questions without the video or calendar, ending on "You're on the
+   waiting list". Asks for name, email and phone first unless page 1 already has them. Its rows show
+   **Waitlist** in the sheet's Version column; "don't qualify" answers go to `/not-qualified` as on `/apply-2`.
 
-`vercel.json` serves `index.html` at `/apply`, `/apply-2`, `/booked` and `/not-qualified`. Images and clips go in
+`vercel.json` serves `index.html` at `/apply`, `/apply-2`, `/booked`, `/not-qualified` and `/waitlist`. Images and clips go in
 `assets/jean-ivan/`. Testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that
 folder's README). The page uses compressed copies in `assets/jean-ivan/proof/`, listed in `PROOF` in the script:
 Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`), each with a small `NAME.webp`

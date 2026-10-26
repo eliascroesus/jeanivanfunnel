@@ -31,7 +31,7 @@
 <script>
   // Pick the page from the URL before anything draws, so /apply never flashes page 1.
   (function () {
-    var pages = { "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified" };
+    var pages = { "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
     var path = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1");
     document.documentElement.setAttribute("data-page", pages[path] || "optin");
   })();
@@ -41,7 +41,8 @@ html:not([data-page="optin"]) #view-optin,
 html:not([data-page="apply"]) #view-apply,
 html:not([data-page="apply2"]) #view-apply2,
 html:not([data-page="booked"]) #view-booked,
-html:not([data-page="notqualified"]) #view-notqualified { display: none; }
+html:not([data-page="notqualified"]) #view-notqualified,
+html:not([data-page="waitlist"]) #view-waitlist { display: none; }
 /* Layout: three funnel steps in one file (opt-in → VSL + application → booked), each a
    black-to-deep-green band with a centred column, white cards for forms, gold for the one action. */
 :root {
@@ -530,6 +531,12 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 }
 .tf__calhead svg { flex: none; width: 18px; height: 18px; }
 .tf.is-done .tf__form, .tf.is-done .tf__nav { display: none; }
+/* Waiting list: shown in the card instead of Calendly once the last answer is in. */
+.tf__thanks { display: grid; justify-items: center; gap: 12px; padding: clamp(36px, 6vw, 60px) clamp(20px, 5vw, 48px); text-align: center; color: var(--card-ink); animation: tf-in .4s ease both; }
+.tf__thanks > svg { width: 44px; height: 44px; padding: 9px; border-radius: 50%; background: var(--deep); color: #fff; }
+.tf__thanks h3 { font-size: clamp(1.35rem, 3.4vw, 1.8rem); font-weight: 800; }
+.tf__thanks p { margin: 0; max-width: 42ch; color: var(--card-muted); font-size: 1rem; }
+.tf__thanks .btn-gold { display: block; max-width: 360px; margin-top: 6px; text-decoration: none; }
 .tf.is-done .tf__cal { animation: tf-in .4s ease both; }
 @media (max-width: 560px) { .tf__body { padding-left: 0; } }
 
@@ -598,7 +605,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 
 /* ---------- Footer ---------- */
 /* ---------- Not qualified ---------- */
-.nq { margin: 0; max-width: 34ch; text-align: center; text-wrap: balance; font-size: clamp(1.05rem, 2.6vw, 1.3rem); line-height: 1.5; }
+.nq, .waitlist__text { margin: 0; max-width: 34ch; text-align: center; text-wrap: balance; font-size: clamp(1.05rem, 2.6vw, 1.3rem); line-height: 1.5; }
 .nq b { color: var(--accent); }
 .nq__btn { display: block; max-width: 420px; text-align: center; text-decoration: none; }
 .nq__note { margin: 0; color: var(--muted); text-align: center; }
@@ -846,7 +853,35 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
         <p class="tf__calhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> Application done. Last step: pick a time for your call.</p>
         <div class="cal-embed" id="tf-embed"></div>
       </div>
+      <!-- /waitlist only: shown instead of Calendly once the last answer is in -->
+      <div class="tf__thanks" id="tf-thanks" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        <h3>You’re On The Waiting List</h3>
+        <p>Thanks for applying. We’ll reach out as soon as a spot opens up.</p>
+        <p id="tf-thanks-discord-text" hidden>In the meantime, join the free Discord, where I teach every week.</p>
+        <a class="btn-gold" id="tf-thanks-discord" href="#" hidden>Join The Free Discord</a>
+      </div>
     </section>
+
+    <footer class="foot">
+      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
+      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+    </footer>
+  </div>
+</main>
+
+<!-- =====================================================================
+     WAITING LIST  (/waitlist)
+     Same one-question-at-a-time card as /apply-2 (moved here by the script), without the video or calendar.
+     Asks for name, email and phone first unless page 1 already has them. Rows show "Waitlist" in Version.
+     ===================================================================== -->
+<main class="view" id="view-waitlist" data-view="waitlist" hidden>
+  <div class="wrap">
+
+    <h1 class="headline">Join The <span class="hl"><span data-fill="program">JFX Elite</span> Waiting&nbsp;List</span></h1>
+    <p class="waitlist__text">Answer a few quick questions to get on the list. You’ll be the first to know when a spot opens&nbsp;up.</p>
+
+    <div id="waitlist-form"></div>
 
     <footer class="foot">
       <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
@@ -1034,6 +1069,15 @@ const CONFIG = {
   ]
 };
 
+// /waitlist asks these first when page 1 didn't give us their details. "check" rejects a bad answer.
+const CONTACT_QUESTIONS = [
+  { key: "name", type: "text", title: "First, what's your full name?", placeholder: "Full name", autocomplete: "name" },
+  { key: "email", type: "text", inputType: "email", title: "What's your email?", placeholder: "name@example.com", autocomplete: "email",
+    check: v => emailOk(v), checkError: "Please enter a valid email." },
+  { key: "phone", type: "text", inputType: "tel", title: "And your phone number?", placeholder: "+1 555 123 4567", autocomplete: "tel",
+    check: v => v.replace(/\D/g, "").length >= 7, checkError: "Please enter a valid phone number." }
+];
+
 // Page 2, version 2 questions (one at a time). type "choice" = pick one, "text" = short typed answer,
 // "long" = written answer that grows as they type (Shift+Enter for a new line).
 // "key" is the spreadsheet field: situation, goal, obstacles, instagram and investment have columns.
@@ -1136,8 +1180,8 @@ $("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; })
 
 /* ---------- Pages: / → /apply or /apply-2 (A/B) → /booked ---------- */
 // On Vercel, vercel.json serves this same file at every path; the path picks the page.
-const PAGES = { "/": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified" };
-const PATHS = { optin: "/", apply: "/apply", apply2: "/apply-2", booked: "/booked", notqualified: "/not-qualified" };
+const PAGES = { "/": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
+const PATHS = { optin: "/", apply: "/apply", apply2: "/apply-2", booked: "/booked", notqualified: "/not-qualified", waitlist: "/waitlist" };
 // Old #apply / #booked links → the matching path.
 if (["#apply", "#booked"].includes(location.hash) && location.protocol !== "file:") {
   location.replace(PATHS[location.hash.slice(1)] + location.search);
@@ -1163,7 +1207,7 @@ function abVersion() {
   try { localStorage.setItem("jeanivan_apply_version", v); } catch {}
   return v;
 }
-const pageVersion = () => (VIEW === "apply2" ? "V2" : VIEW === "apply" ? "V1" : abVersion());
+const pageVersion = () => (VIEW === "waitlist" ? "Waitlist" : VIEW === "apply2" ? "V2" : VIEW === "apply" ? "V1" : abVersion());
 
 function route() {
   $$("[data-view]").forEach(v => { v.hidden = v.dataset.view !== VIEW; });
@@ -1173,6 +1217,11 @@ function route() {
   fitHeadings();
   if (VIEW === "apply") prefillApply();
   if (VIEW === "apply2") initTypeform();
+  if (VIEW === "waitlist") {
+    $("#waitlist-form").replaceWith(tf);   // same question card as /apply-2
+    $("#tf-cal").remove();
+    initTypeform();
+  }
   toast.active(VIEW === "optin");
 }
 
@@ -1375,18 +1424,20 @@ document.addEventListener("click", e => { if (openDropdown && !e.target.closest(
 const tf = $("#tf"), tfForm = $("#tf-form");
 const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-let tfIndex = 0, tfSteps = [], tfAdvanceTimer = null, tfSent = "";
+let tfIndex = 0, tfSteps = [], tfAdvanceTimer = null, tfSent = "", tfQuestions = APPLY2_QUESTIONS;
 const typeformData = () => ({ ...lead, ...Object.fromEntries(new FormData(tfForm)) });
 
 function initTypeform() {
-  tfForm.innerHTML = APPLY2_QUESTIONS.map((q, i) => {
+  const knowThem = lead.name && lead.email && lead.phone;
+  tfQuestions = VIEW === "waitlist" && !knowThem ? [...CONTACT_QUESTIONS, ...APPLY2_QUESTIONS] : APPLY2_QUESTIONS;
+  tfForm.innerHTML = tfQuestions.map((q, i) => {
     const id = "tf-" + q.key;
     const field = q.type === "choice"
       ? `<div class="tf__opts" role="radiogroup" aria-labelledby="${id}-title">${q.options.map((o, k) =>
           `<label class="tf__opt"><input type="radio" name="${q.key}" value="${esc(o)}"><span class="tf__key">${String.fromCharCode(65 + k)}</span><span>${esc(o)}</span>${CHECK}</label>`).join("")}</div>`
       : q.type === "long"
         ? `<textarea class="tf__input" id="${id}" name="${q.key}" rows="1" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title"></textarea>`
-        : `<input class="tf__input" id="${id}" name="${q.key}" autocomplete="off" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title">`;
+        : `<input class="tf__input" id="${id}" name="${q.key}" type="${q.inputType || "text"}" autocomplete="${q.autocomplete || "off"}" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title">`;
     return `<div class="tf__step" data-i="${i}" hidden>
       <div class="tf__head"><span class="tf__num">${i + 1}${ARROW}</span><h3 class="tf__title${q.title.length > 110 ? " tf__title--long" : ""}" id="${id}-title">${esc(q.title)}&nbsp;<span class="req">*</span></h3></div>
       <div class="tf__body">
@@ -1399,10 +1450,10 @@ function initTypeform() {
   }).join("");
   tfSteps = $$(".tf__step", tfForm);
   tfShow(0);
-  initCalendly($("#tf-embed"));   // loads hidden now, so it's ready the moment the last answer is in
+  if (VIEW === "apply2") initCalendly($("#tf-embed"));   // loads hidden now, so it's ready the moment the last answer is in
 }
 function tfValue(i) {
-  const q = APPLY2_QUESTIONS[i];
+  const q = tfQuestions[i];
   return q.type === "choice"
     ? tfForm.querySelector(`input[name="${q.key}"]:checked`)?.value || ""
     : tfForm.elements[q.key].value.trim();
@@ -1411,32 +1462,39 @@ function tfShow(i) {
   clearTimeout(tfAdvanceTimer);
   tfIndex = i;
   tfSteps.forEach((st, k) => { st.hidden = k !== i; st.classList.toggle("is-in", k === i); });
-  $("#tf-bar").style.width = (i / APPLY2_QUESTIONS.length) * 100 + "%";
+  $("#tf-bar").style.width = (i / tfQuestions.length) * 100 + "%";
   $("#tf-prev").disabled = i === 0;
   const input = tfSteps[i].querySelector(".tf__input");
   if (input && matchMedia("(hover: hover)").matches) input.focus({ preventScroll: true });
 }
 function tfNext() {
-  const q = APPLY2_QUESTIONS[tfIndex], err = tfSteps[tfIndex].querySelector(".tf__err");
-  if (!tfValue(tfIndex)) {
-    err.textContent = q.type === "choice" ? "Please pick an answer." : "Please fill this in.";
+  const q = tfQuestions[tfIndex], err = tfSteps[tfIndex].querySelector(".tf__err"), value = tfValue(tfIndex);
+  const problem = !value ? (q.type === "choice" ? "Please pick an answer." : "Please fill this in.")
+    : q.check && !q.check(value) ? q.checkError : "";
+  if (problem) {
+    err.textContent = problem;
     err.hidden = false;
     return;
   }
   err.hidden = true;
   // Save each answer as it's given, so drop-offs show in the sheet (skipped if nothing changed).
+  // Rows are matched by email, so nothing is sent until we have one.
   const data = typeformData(), key = JSON.stringify(data);
-  if (key !== tfSent) { tfSent = key; sendLead(data, "application"); }
-  if (tfIndex < APPLY2_QUESTIONS.length - 1) tfShow(tfIndex + 1);
+  if (data.email && key !== tfSent) { tfSent = key; sendLead(data, "application"); }
+  if (tfIndex < tfQuestions.length - 1) tfShow(tfIndex + 1);
   else if (CONFIG.disqualify.includes(data.investment)) go("notqualified");
   else tfFinish();
 }
 function tfFinish() {
   $("#tf-bar").style.width = "100%";
   tf.classList.add("is-done");
-  const cal = $("#tf-cal");
-  cal.classList.remove("is-waiting");
-  cal.inert = false;
+  if (VIEW === "waitlist") {
+    $("#tf-thanks").hidden = false;
+  } else {
+    const cal = $("#tf-cal");
+    cal.classList.remove("is-waiting");
+    cal.inert = false;
+  }
   tf.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 tfForm.addEventListener("submit", e => e.preventDefault());
@@ -1456,8 +1514,8 @@ tfForm.addEventListener("input", e => {
 $("#tf-prev").addEventListener("click", () => { if (tfIndex > 0) tfShow(tfIndex - 1); });
 $("#tf-next").addEventListener("click", tfNext);
 document.addEventListener("keydown", e => {
-  if (VIEW !== "apply2" || tf.classList.contains("is-done") || e.metaKey || e.ctrlKey || e.altKey) return;
-  const q = APPLY2_QUESTIONS[tfIndex];
+  if ((VIEW !== "apply2" && VIEW !== "waitlist") || tf.classList.contains("is-done") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const q = tfQuestions[tfIndex];
   if (e.key === "Enter" && e.shiftKey && e.target.matches("textarea")) return;   // new line in a written answer
   if (e.key === "Enter" && tf.contains(document.activeElement) && !document.activeElement.matches("button")) { e.preventDefault(); tfNext(); return; }
   if (e.key === "Enter" && document.activeElement === document.body && tfValue(tfIndex)) { e.preventDefault(); tfNext(); return; }
@@ -1468,11 +1526,13 @@ document.addEventListener("keydown", e => {
   }
 });
 
-/* ---------- Not qualified: Discord button when there's an invite link ---------- */
+/* ---------- Discord button on /not-qualified and the waiting-list thank-you, when there's an invite link ---------- */
 if (CONFIG.discordUrl) {
   $("#nq-discord").href = CONFIG.discordUrl;
   $("#nq-discord").hidden = false;
   $("#nq-check").hidden = true;
+  $("#tf-thanks-discord").href = CONFIG.discordUrl;
+  $("#tf-thanks-discord").hidden = $("#tf-thanks-discord-text").hidden = false;
 }
 
 /* ---------- Results galleries (tap an image to see it bigger) ---------- */
