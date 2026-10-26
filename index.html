@@ -883,6 +883,13 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 
     <div id="waitlist-form"></div>
 
+    <!-- Same results gallery as page 1 (listed in PROOF in the script below) -->
+    <section class="receipts" aria-label="Results">
+      <div class="receipts__grid" data-proof></div>
+    </section>
+
+    <button class="btn-gold" type="button" id="back-to-waitlist" style="max-width:560px">Join The Waiting List</button>
+
     <footer class="foot">
       <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
       Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
@@ -1304,6 +1311,7 @@ $("#optin-form").addEventListener("submit", e => {
   store.set("lead", lead);
   go(version === "V2" ? "apply2" : "apply");
 });
+$("#back-to-waitlist").addEventListener("click", () => tf.scrollIntoView({ behavior: "smooth", block: "center" }));
 $("#back-to-form").addEventListener("click", () => { $("#optin-form").scrollIntoView({ behavior: "smooth", block: "center" }); $("#o-name").focus({ preventScroll: true }); });
 
 /* ---------- Application form gates the Calendly booking ---------- */
@@ -1490,6 +1498,7 @@ function tfFinish() {
   tf.classList.add("is-done");
   if (VIEW === "waitlist") {
     $("#tf-thanks").hidden = false;
+    $("#back-to-waitlist").hidden = true;   // they're already on the list
   } else {
     const cal = $("#tf-cal");
     cal.classList.remove("is-waiting");

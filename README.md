@@ -21,7 +21,7 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
 `assets/jean-ivan/`. Testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that
 folder's README). The page uses compressed copies in `assets/jean-ivan/proof/`, listed in `PROOF` in the script:
 Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`), each with a small `NAME.webp`
-for the page and a `NAME-full.webp` that opens when the image is tapped. Page 1 and `/booked` show all of them.
+for the page and a `NAME-full.webp` that opens when the image is tapped. Page 1, `/booked` and `/waitlist` show all of them.
 
 ## Hosting
 
