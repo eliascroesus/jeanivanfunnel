@@ -47,6 +47,28 @@ The "Version" column shows which page 2 (V1 or V2) each lead got, so the two can
 Setup steps are at the top of `lead-capture.gs`. The Web app URL goes in `leadSheetUrl` in the
 `CONFIG` block near the end of `index.html`; until it's set, the funnel works but sends nothing.
 
+## Leads to GoHighLevel
+
+The same Apps Script also sends every lead to GoHighLevel through its API (free, unlike the premium
+Inbound Webhook trigger). It's off until the script has two Script properties, `GHL_TOKEN` (a sub-account
+Private Integration token) and `GHL_LOCATION_ID`; run `checkGhl` in the script editor to see what it found.
+
+- Every event creates or updates the contact (name, email, phone, country) and fills any contact custom
+  field whose name matches a sheet column header, e.g. "Instagram", "Investment", "Main Problem".
+- These funnel steps also add a tag and set the opportunity's stage in the **JFX Elite** pipeline. Stages
+  are matched by name and only move forward; stages added by hand (Showed, Won…) are never moved back.
+
+| Funnel step | Stage | Tag |
+| --- | --- | --- |
+| Opt-in on `/discord` | Opted In | `jfx-optin` |
+| Finished the waiting list | Waitlist | `jfx-waitlist` |
+| Finished an application | Applied | `jfx-applied` |
+| "Don't qualify" investment answer | Not Qualified | `jfx-not-qualified` |
+| Calendly booking | Call Booked | `jfx-booked` |
+
+The page marks a finished application with a `stage` field; single answers only update the contact's fields.
+Pipeline, stage and tag names live in `GHL_PIPELINE` and `GHL_STEPS` at the bottom of `lead-capture.gs`.
+
 ## Editing
 
 Brand name, videos, the Calendly link and the sheet URL are all in the `CONFIG` block. To swap a video
