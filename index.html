@@ -494,6 +494,37 @@ h1, h2, h3 { position: relative; font-family: var(--display); margin: 0; text-wr
 textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 18px); }
 .tf__input::placeholder { color: #afc3b6; }
 .tf__input:focus { outline: none; border-bottom-color: var(--deep); }
+/* Phone question (waiting list): flag button + number, and a searchable country list that opens under them. */
+.tf__phone { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 14px; max-width: 680px; }
+.tf__cc {
+  display: flex; align-items: center; gap: 8px; align-self: stretch;
+  padding: 8px 2px 10px 0; border: 0; border-bottom: 2px solid var(--card-ink); border-radius: 0;
+  background: none; color: var(--card-muted); cursor: pointer;
+}
+.tf__cc:focus-visible { outline: none; border-bottom-color: var(--deep); }
+.tf__cc svg { width: 18px; height: 18px; transition: transform .2s ease; }
+.tf__cc[aria-expanded="true"] svg { transform: rotate(180deg); }
+.tf__cc img, .tf__ccopt img { flex: none; width: 30px; height: 22px; border-radius: 4px; object-fit: cover; box-shadow: 0 0 0 1px rgba(15, 31, 23, .18); }
+.tf__ccpanel {
+  max-width: 440px; padding: 12px; margin-top: -8px;
+  border: 1px solid var(--field-line); border-radius: 14px; background: var(--card);
+  box-shadow: 0 16px 40px rgba(15, 31, 23, .12);
+}
+.tf__ccsearch { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--card-ink); color: var(--card-ink); }
+.tf__ccsearch input { flex: 1; min-width: 0; padding: 8px 0; border: 0; background: none; font: 400 1.15rem var(--body); color: var(--card-ink); }
+.tf__ccsearch input:focus { outline: none; }
+.tf__ccsearch input::placeholder { color: #afc3b6; }
+.tf__ccsearch svg { flex: none; width: 20px; height: 20px; }
+.tf__cclist { display: grid; gap: 8px; max-height: 300px; overflow-y: auto; margin: 0; padding: 2px 6px 2px 2px; list-style: none; }
+.tf__ccopt {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  border: 1px solid var(--field-line); border-radius: 10px; background: var(--field);
+  font-size: 1rem; color: var(--card-ink); cursor: pointer;
+}
+.tf__ccopt:hover, .tf__ccopt.is-active { border-color: #b9bec6; background: var(--field-done); }
+.tf__ccopt[aria-selected="true"] { border: 2px solid var(--card-ink); background: var(--field-done); padding: 9px 13px; }
+.tf__ccode { margin-left: auto; color: var(--card-muted); font-variant-numeric: tabular-nums; }
+.tf__ccnone { padding: 10px 4px; color: var(--card-muted); }
 .tf__actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 .tf__ok {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1083,8 +1114,8 @@ const CONTACT_QUESTIONS = [
   { key: "name", type: "text", title: "First, what's your full name?", placeholder: "Full name", autocomplete: "name" },
   { key: "email", type: "text", inputType: "email", title: "What's your email?", placeholder: "name@example.com", autocomplete: "email",
     check: v => emailOk(v), checkError: "Please enter a valid email." },
-  { key: "phone", type: "text", inputType: "tel", title: "And your phone number?", placeholder: "+1 555 123 4567", autocomplete: "tel",
-    check: v => v.replace(/\D/g, "").length >= 7, checkError: "Please enter a valid phone number." }
+  // "phone" = country picker + number, checked against that country's real number rules (see phoneUi).
+  { key: "phone", type: "phone", title: "And your phone number?", check: () => phoneUi.commit(), checkError: () => phoneUi.error() }
 ];
 
 // Page 2, version 2 questions (one at a time). type "choice" = pick one, "text" = short typed answer,
@@ -1446,7 +1477,9 @@ function initTypeform() {
     const field = q.type === "choice"
       ? `<div class="tf__opts" role="radiogroup" aria-labelledby="${id}-title">${q.options.map((o, k) =>
           `<label class="tf__opt"><input type="radio" name="${q.key}" value="${esc(o)}"><span class="tf__key">${String.fromCharCode(65 + k)}</span><span>${esc(o)}</span>${CHECK}</label>`).join("")}</div>`
-      : q.type === "long"
+      : q.type === "phone"
+        ? phoneUi.html(id)
+        : q.type === "long"
         ? `<textarea class="tf__input" id="${id}" name="${q.key}" rows="1" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title"></textarea>`
         : `<input class="tf__input" id="${id}" name="${q.key}" type="${q.inputType || "text"}" autocomplete="${q.autocomplete || "off"}" placeholder="${esc(q.placeholder || "")}" aria-labelledby="${id}-title">`;
     return `<div class="tf__step" data-i="${i}" hidden>
@@ -1460,6 +1493,8 @@ function initTypeform() {
     </div>`;
   }).join("");
   tfSteps = $$(".tf__step", tfForm);
+  const phoneStep = tfQuestions.findIndex(q => q.type === "phone");
+  if (phoneStep >= 0) phoneUi.attach(tfSteps[phoneStep]);
   tfShow(0);
   if (VIEW === "apply2") initCalendly($("#tf-embed"));   // loads hidden now, so it's ready the moment the last answer is in
 }
@@ -1467,11 +1502,14 @@ function tfValue(i) {
   const q = tfQuestions[i];
   return q.type === "choice"
     ? tfForm.querySelector(`input[name="${q.key}"]:checked`)?.value || ""
-    : tfForm.elements[q.key].value.trim();
+    : q.type === "phone"
+      ? tfSteps[i].querySelector(".tf__input").value.trim()   // what they typed; the checked number goes in a hidden field
+      : tfForm.elements[q.key].value.trim();
 }
 function tfShow(i) {
   clearTimeout(tfAdvanceTimer);
   tfIndex = i;
+  phoneUi.close();
   tfSteps.forEach((st, k) => { st.hidden = k !== i; st.classList.toggle("is-in", k === i); });
   $("#tf-bar").style.width = (i / tfQuestions.length) * 100 + "%";
   $("#tf-prev").disabled = i === 0;
@@ -1481,7 +1519,7 @@ function tfShow(i) {
 function tfNext() {
   const q = tfQuestions[tfIndex], err = tfSteps[tfIndex].querySelector(".tf__err"), value = tfValue(tfIndex);
   const problem = !value ? (q.type === "choice" ? "Please pick an answer." : "Please fill this in.")
-    : q.check && !q.check(value) ? q.checkError : "";
+    : q.check && !q.check(value) ? (typeof q.checkError === "function" ? q.checkError() : q.checkError) : "";
   if (problem) {
     err.textContent = problem;
     err.hidden = false;
@@ -1571,6 +1609,191 @@ document.addEventListener("click", e => {
   zoom.showModal();
 });
 zoom.addEventListener("click", () => zoom.close());
+
+/* ---------- Phone number with a country picker (waiting list) ---------- */
+// Uses Google's phone number rules (libphonenumber-js), loaded only when this question is on the page:
+// each country only accepts numbers that really exist there, the number is formatted as they type,
+// a typed "+44…" (or "0044…") picks the country, and US is the default. The hidden "phone" field gets the
+// full international number (+12015550123) and "country" the two-letter code, for the sheet and GoHighLevel.
+const phoneUi = (() => {
+  const LIB = "https://cdn.jsdelivr.net/npm/libphonenumber-js@1.13.15/";
+  const FLAGS = "https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/";
+  // Used only if the rules can't load: a few common countries, any 6–12 digits.
+  const BASIC = { US: "1", CA: "1", GB: "44", AU: "61", DE: "49", AE: "971" };
+  const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  const SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+  let lib = null, examples = null, loading = false, country = "US", step = null, built = false, active = -1;
+  let regionName = c => c;
+  try { const dn = new Intl.DisplayNames(["en"], { type: "region" }); regionName = c => dn.of(c) || c; } catch {}
+  const flagUrl = c => FLAGS + ({ AC: "sh-ac", TA: "sh-ta" }[c] || c.toLowerCase()) + ".svg";
+  const flagImg = c => `<img src="${flagUrl(c)}" alt="" width="30" height="22" loading="lazy" onerror="this.style.visibility='hidden'">`;
+  const callingCode = c => (lib ? lib.getCountryCallingCode(c) : BASIC[c] || "1");
+  const mainCountry = code => (lib ? new lib.Metadata().getCountryCodesForCallingCode(code)[0] : Object.keys(BASIC).find(c => BASIC[c] === code));
+  const $in = sel => step.querySelector(sel);
+  const fold = t => t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+  function load() {
+    if (lib || loading) return;
+    loading = true;
+    const s = document.createElement("script");
+    s.src = LIB + "bundle/libphonenumber-max.js";
+    s.async = true;
+    s.onload = () => { lib = window.libphonenumber || null; built = false; refresh(); };
+    document.head.appendChild(s);
+    fetch(LIB + "examples.mobile.json").then(r => r.json()).then(j => { examples = j; refresh(); }).catch(() => {});
+  }
+  const example = (c = country) => { try { return lib && examples ? lib.getExampleNumber(c, examples).formatNational() : ""; } catch { return ""; } };
+
+  // → { ok, e164, country, national } for what they typed, read in the selected country unless it starts with + or 00.
+  function parse(raw) {
+    const text = raw.trim().replace(/^00/, "+");
+    if (!lib) {
+      const digits = text.replace(/\D/g, ""), code = callingCode(country);
+      const national = text.startsWith("+") ? digits.slice(code.length) : digits.replace(/^0/, "");
+      return { ok: national.length >= 6 && national.length <= 12, e164: "+" + code + national, country, national: text };
+    }
+    const p = lib.parsePhoneNumberFromString(text, country);
+    if (!p) return { ok: false };
+    const c = p.country || (p.countryCallingCode === callingCode(country) ? country : mainCountry(p.countryCallingCode));
+    return { ok: p.isValid(), e164: p.number, country: c, national: p.formatNational() };
+  }
+
+  function setCountry(c) {
+    if (!c) return;
+    country = c;
+    const btn = $in(".tf__cc");
+    btn.innerHTML = flagImg(c) + CHEV;
+    btn.setAttribute("aria-label", "Country: " + regionName(c) + " +" + callingCode(c));
+    $in(".tf__input").placeholder = example(c) || (c === "US" ? "(201) 555-0123" : "+" + callingCode(c));
+    $in('input[name="country"]').value = c;
+    if (built) $$(".tf__ccopt", step).forEach(li => li.setAttribute("aria-selected", String(li.dataset.c === c)));
+  }
+  function refresh() {
+    if (!step) return;
+    setCountry(country);
+    if (!$in(".tf__ccpanel").hidden) build();
+  }
+
+  function build() {
+    const list = $in(".tf__cclist");
+    const all = (lib ? lib.getCountries() : Object.keys(BASIC)).map(c => ({ c, name: regionName(c), code: callingCode(c) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    list.innerHTML = all.map(x => `<li class="tf__ccopt" role="option" id="tf-cc-${x.c}" data-c="${x.c}" data-find="${esc(fold(x.name + " " + x.c))}" data-code="${x.code}" aria-selected="${x.c === country}">${flagImg(x.c)}<span>${esc(x.name)}</span><span class="tf__ccode">+${x.code}</span></li>`).join("")
+      + '<li class="tf__ccnone" hidden>No matching country</li>';
+    built = true;
+  }
+  const shown = () => $$(".tf__ccopt:not([hidden])", step);
+  function setActive(i) {
+    const items = shown();
+    $$(".tf__ccopt.is-active", step).forEach(li => li.classList.remove("is-active"));
+    active = Math.max(-1, Math.min(items.length - 1, i));
+    if (active >= 0) { items[active].classList.add("is-active"); items[active].scrollIntoView({ block: "nearest" }); }
+  }
+  function filter() {
+    const q = fold($in(".tf__ccsearch input").value.trim()), digits = q.replace(/^\+/, "");
+    let any = false;
+    $$(".tf__ccopt", step).forEach(li => {
+      const hit = !q || li.dataset.find.includes(q) || (/^\d+$/.test(digits) && li.dataset.code.startsWith(digits));
+      li.hidden = !hit; any = any || hit;
+    });
+    $in(".tf__ccnone").hidden = any;
+    setActive(q ? 0 : -1);
+  }
+  function open() {
+    if (!built) build();
+    const panel = $in(".tf__ccpanel"), search = $in(".tf__ccsearch input");
+    panel.hidden = false;
+    $in(".tf__cc").setAttribute("aria-expanded", "true");
+    search.value = "";
+    filter();
+    $in(`#tf-cc-${country}`)?.scrollIntoView({ block: "center" });
+    if (matchMedia("(hover: hover)").matches) search.focus({ preventScroll: true });
+  }
+  function close() {
+    if (!step || $in(".tf__ccpanel").hidden) return;
+    $in(".tf__ccpanel").hidden = true;
+    $in(".tf__cc").setAttribute("aria-expanded", "false");
+  }
+  function choose(c) {
+    setCountry(c);
+    close();
+    const input = $in(".tf__input");
+    if (lib && input.value.trim() && !input.value.trim().startsWith("+")) input.value = new lib.AsYouType(c).input(input.value);
+    syncHidden();
+    input.focus();
+  }
+
+  // The hidden fields only ever hold a checked number.
+  function syncHidden() {
+    const p = parse($in(".tf__input").value);
+    $in('input[name="phone"]').value = p.ok ? p.e164 : "";
+  }
+  // On OK / Enter: checks the number, picks the country it really belongs to, and shows it in local format.
+  function commit() {
+    const input = $in(".tf__input"), p = parse(input.value);
+    if (p.ok) {
+      setCountry(p.country);
+      input.value = p.national;
+      $in('input[name="phone"]').value = p.e164;
+    } else {
+      $in('input[name="phone"]').value = "";
+    }
+    input.setAttribute("aria-invalid", String(!p.ok));
+    return p.ok;
+  }
+  function error() {
+    const eg = example();
+    return "Please enter a valid " + regionName(country) + " number" + (eg ? ", like " + eg : "") + ".";
+  }
+
+  function attach(el) {
+    step = el;
+    built = false;
+    load();
+    setCountry(country);
+    const input = $in(".tf__input"), search = $in(".tf__ccsearch input");
+    $in(".tf__cc").addEventListener("click", () => ($in(".tf__ccpanel").hidden ? open() : close()));
+    input.addEventListener("input", e => {
+      input.removeAttribute("aria-invalid");
+      const atEnd = input.selectionStart === input.value.length;
+      const text = input.value.replace(/^00/, "+");
+      if (lib && text.startsWith("+")) {   // their own country code: pick that country as soon as it's clear
+        const t = new lib.AsYouType(), out = t.input(text), code = t.getCallingCode();
+        const c = t.getCountry() || (code && code !== callingCode(country) ? mainCountry(code) : null);
+        if (c && c !== country) setCountry(c);
+        if (atEnd && !e.inputType?.startsWith("delete")) input.value = out;
+      } else if (lib && atEnd && !e.inputType?.startsWith("delete")) {
+        input.value = new lib.AsYouType(country).input(text);   // (201) 555-0123 as they type
+      }
+      syncHidden();
+    });
+    input.addEventListener("blur", () => {
+      const p = input.value.trim() && parse(input.value);
+      if (p && p.ok) { setCountry(p.country); input.value = p.national; syncHidden(); }
+    });
+    search.addEventListener("input", filter);
+    search.addEventListener("keydown", e => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setActive(active + (e.key === "ArrowDown" ? 1 : -1)); }
+      else if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); const li = shown()[Math.max(active, 0)]; if (li) choose(li.dataset.c); }
+      else if (e.key === "Escape") { e.stopPropagation(); close(); $in(".tf__cc").focus(); }
+    });
+    $in(".tf__cclist").addEventListener("click", e => { const li = e.target.closest(".tf__ccopt"); if (li) choose(li.dataset.c); });
+    document.addEventListener("click", e => { if (!e.target.closest(".tf__ccpanel, .tf__cc")) close(); });
+  }
+
+  function html(id) {
+    return `<div class="tf__phone">
+          <button type="button" class="tf__cc" aria-haspopup="listbox" aria-expanded="false"></button>
+          <input class="tf__input" id="${id}" type="tel" inputmode="tel" autocomplete="tel" aria-labelledby="${id}-title">
+          <input type="hidden" name="phone"><input type="hidden" name="country">
+        </div>
+        <div class="tf__ccpanel" hidden>
+          <label class="tf__ccsearch"><input type="search" placeholder="Search countries" aria-label="Search countries" autocomplete="off">${SEARCH}</label>
+          <ul class="tf__cclist" role="listbox" aria-label="Countries"></ul>
+        </div>`;
+  }
+  return { html, attach, commit, error, close };
+})();
 
 /* ---------- Calendly ---------- */
 // Name and email come from the page 1 opt-in (or ?name=&email= in the link).

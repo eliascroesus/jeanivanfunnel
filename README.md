@@ -15,7 +15,9 @@ Trading funnel. All pages live in one file, `index.html`; the URL picks the page
    answer is in `CONFIG.disqualify` ("Under $500" on V1, "don't have the resources" on V2). Their answers still
    go to the sheet. Put the Discord invite in `CONFIG.discordUrl` to show a "Join The Free Discord" button.
 5. **Waiting list** (`/waitlist`): the `/apply-2` questions without the video or calendar, ending on "You're on the
-   waiting list". Asks for name, email and phone first unless page 1 already has them. Its rows show
+   waiting list". Asks for name, email and phone first unless page 1 already has them. The phone question has a
+   searchable country picker (US by default) and checks the number against that country's rules with
+   libphonenumber-js, loaded from jsDelivr only on that question; the sheet gets it as +12015550123. Its rows show
    **Waitlist** in the sheet's Version column; "don't qualify" answers go to `/not-qualified` as on `/apply-2`.
 
 `vercel.json` serves `index.html` at `/discord`, `/apply`, `/apply-2`, `/booked`, `/not-qualified` and `/waitlist`. Images and clips go in
