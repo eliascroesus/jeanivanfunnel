@@ -27,7 +27,12 @@ for the page and a `NAME-full.webp` that opens when the image is tapped. Page 1,
 ## Hosting
 
 It's a static site with no build step. On Vercel, import this repo with the default settings
-(Framework: Other). Every push to `main` redeploys.
+(Framework: Other). Every push to the production branch redeploys.
+
+The live domain is **jeanfxtrading.com** (DNS at Network Solutions). `vercel.json` sends the old
+`jeanfx.vercel.app` and `jeanivanfunnel.vercel.app` addresses there with a permanent redirect, keeping the path
+and any `?utm_…` parameters. Preview deployments keep their own `.vercel.app` addresses. The link-preview tags
+(`og:url`, `og:image`) near the top of `index.html` use the same domain.
 
 ## Leads to Google Sheets
 
