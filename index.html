@@ -1075,7 +1075,7 @@ const CONFIG = {
 
   // Paste an embed URL to replace a placeholder (YouTube/Vimeo/Wistia embed link or an .mp4).
   videos: {
-    vsl: "",
+    vsl: "https://player.vimeo.com/video/1242132867?badge=0&autopause=0&player_id=0&app_id=58479",
     nextSteps: "",
     faqInside: "",
     faqLegit: "",
@@ -1198,6 +1198,7 @@ const PROOF = [
 /* ======================================================================= */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const store = {
   get(k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} }
@@ -1207,14 +1208,19 @@ const store = {
 $$("[data-fill]").forEach(el => { if (CONFIG[el.dataset.fill] != null) el.textContent = CONFIG[el.dataset.fill]; });
 $("#meter").style.setProperty("--fill", CONFIG.spotsFill + "%");
 
-// Swap placeholders for real embeds when a URL is configured
-$$(".video[data-video]").forEach(box => {
-  const url = CONFIG.videos[box.dataset.video];
-  if (!url) return;
-  box.innerHTML = /\.(mp4|webm|m3u8)(\?|$)/i.test(url)
-    ? `<video src="${url}" controls playsinline></video>`
-    : `<iframe src="${url}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-});
+// Swaps a page's placeholders for the real embeds set in CONFIG.videos. route() calls it for the visible
+// page only, so the other pages (which share this file) never load a video player.
+function embedVideos(page) {
+  $$(".video[data-video]", page).forEach(box => {
+    const url = CONFIG.videos[box.dataset.video];
+    if (!url) return;
+    const title = box.querySelector(".video__name")?.textContent || "Video";
+    // Same permissions as Vimeo's own embed code; the referrer lets domain-restricted Vimeo videos play.
+    box.innerHTML = /\.(mp4|webm|m3u8)(\?|$)/i.test(url)
+      ? `<video src="${url}" controls playsinline title="${esc(title)}"></video>`
+      : `<iframe src="${url}" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="${esc(title)}"></iframe>`;
+  });
+}
 $$(".video__play").forEach(btn => btn.addEventListener("click", () => btn.closest(".video").classList.toggle("is-playing")));
 $("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; });
 
@@ -1252,6 +1258,7 @@ const pageVersion = () => (VIEW === "waitlist" ? "Waitlist" : VIEW === "apply2" 
 function route() {
   $$("[data-view]").forEach(v => { v.hidden = v.dataset.view !== VIEW; });
   const page = $(`[data-view="${VIEW}"]`);
+  embedVideos(page);
   // Only the visible page's clips play, so the other pages' videos never download.
   $$("video[data-autoplay]", page).forEach(v => { v.preload = "auto"; v.autoplay = true; v.play().catch(() => {}); });
   fitHeadings();
@@ -1465,7 +1472,6 @@ document.addEventListener("click", e => { if (openDropdown && !e.target.closest(
 /* ---------- Page 2, version 2: one question at a time ---------- */
 const tf = $("#tf"), tfForm = $("#tf-form");
 const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 let tfIndex = 0, tfSteps = [], tfAdvanceTimer = null, tfSent = "", tfQuestions = APPLY2_QUESTIONS;
 const typeformData = () => ({ ...lead, ...Object.fromEntries(new FormData(tfForm)) });
 
