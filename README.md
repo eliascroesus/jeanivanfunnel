@@ -80,3 +80,9 @@ Pipeline, stage and tag names live in `GHL_PIPELINE` and `GHL_STEPS` at the bott
 
 Brand name, videos, the Calendly link and the sheet URL are all in the `CONFIG` block. To swap a video
 placeholder for a real video, paste its embed link into `CONFIG.videos`.
+
+Vimeo videos play the same way as in the Ricky funnel: Vimeo's title, picture, name, logo, share buttons and
+captions are switched off and the page draws its own play, progress, sound and full-screen controls (Vimeo's
+player library is in `assets/vimeo-player.min.js`). The VSL (and `nextSteps`) autoplay muted behind a
+"Click to listen" box that restarts them with sound; `AUTOPLAY_VIDEOS` lists them. Only the page being shown
+loads its videos, and page 1 loads the VSL off-screen once someone starts the form so /apply opens fast.
