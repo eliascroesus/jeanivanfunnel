@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call Booked | Jean Ivan</title>
+<meta name="description" content="Your call with Jean Ivan is booked. Watch the video and confirm your call.">
+<!-- Redesign trial: kept out of search engines until it replaces the main pages. -->
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/redesign/style.css">
+</head>
+<body data-page="booked">
+
+<div class="gbar"><span class="dot"></span><span><b>Your call is booked</b> · but it's not confirmed yet</span></div>
+
+<header class="hero">
+  <svg class="hero-chev" viewBox="0 0 340 640" aria-hidden="true">
+    <defs><linearGradient id="chev" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe94d"/><stop offset=".55" stop-color="#f5d90a"/><stop offset="1" stop-color="#8a7a00"/></linearGradient></defs>
+    <polyline points="-30,40 150,320 -30,600" fill="none" stroke="#f5d90a" stroke-width="3" opacity=".35"/>
+    <polyline points="20,0 220,320 20,640" fill="none" stroke="#f5d90a" stroke-width="7" opacity=".55"/>
+    <polygon points="90,0 170,0 370,320 170,640 90,640 290,320" fill="url(#chev)"/>
+  </svg>
+  <div class="wrap">
+    <div class="pill">You're almost done</div>
+    <h1>Congratulations! <span class="accent">Watch The Video Below</span> ASAP.</h1>
+    <p class="hero-sub">Your call is booked, but it's <strong>not confirmed yet</strong>. Here's what to do before we talk.</p>
+    <div class="step-mini">Step 1 · Watch this 2 minute video</div>
+    <!-- The thank-you video is 4:3; the box takes the real shape once it loads. -->
+    <div class="vslframe" id="next-steps" style="aspect-ratio: 4 / 3; max-width: 560px">
+      <div class="vph"><span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></span><span class="vtxt">Loading video…</span></div>
+    </div>
+
+    <!-- Opens their inbox at the confirmation email (spam included). The links are set by the script from their email. -->
+    <div class="confirm">
+      <a class="confirm__btn" id="confirm-gmail" href="https://mail.google.com/mail/u/0/#search/in%3Aanywhere+subject%3A%22Strategy+Call%22" target="_blank" rel="noopener">
+        <svg viewBox="52 42 88 66" aria-hidden="true"><path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6"/><path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15"/><path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2"/><path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92"/><path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2"/></svg>
+        <span class="confirm__label"><small>Confirm In </small>Gmail</span>
+      </a>
+      <a class="confirm__btn" id="confirm-outlook" href="https://outlook.live.com/mail/0/" target="_blank" rel="noopener">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="6" width="17" height="20" rx="2" fill="#28a8ea"/><path d="M12 12l8.5 5.5L29 12" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="3" y="9" width="14" height="14" rx="2" fill="#0364b8"/><ellipse cx="10" cy="16" rx="3.3" ry="4" fill="none" stroke="#fff" stroke-width="2"/></svg>
+        <span class="confirm__label"><small>Confirm In </small>Outlook</span>
+      </a>
+    </div>
+
+    <div class="gpanel">
+      <div class="glabel"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 1 21h22L12 2z"/><path d="M12 9v5m0 3v.5" stroke="#070707" stroke-width="2.4" stroke-linecap="round"/></svg>Important</div>
+      <p>Go to your inbox and find the confirmation email for your call. <b>Check your Spam and Promotions folders too.</b></p>
+      <p>Open it and <b>confirm your call</b>. The buttons above take you straight to it.</p>
+    </div>
+  </div>
+</header>
+
+<section class="section section-soft">
+  <div class="wrap">
+    <div class="step-ribbon">Step 2 · Before your call</div>
+    <h2>Questions Traders <span class="accent">Ask Jean</span></h2>
+    <p class="sub">Watch these before we talk, so we can spend the call on <b>your trading</b>.</p>
+    <div class="vid-grid" id="faq-videos"></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="section">
+  <div class="wrap">
+    <div class="step-ribbon">Step 3 · See the results</div>
+    <h2>Payouts From Me And <span class="accent">The JFX Community</span></h2>
+    <p class="sub">Payout certificates and messages from Jean Ivan and members of the Discord. Tap any of them to see it bigger.</p>
+    <div class="wall" data-proof></div>
+    <p class="wall-rnt">Individual results. Not typical and not a promise of what you will earn.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand"><img src="/favicon.png" alt="">Jean FX Trading</div>
+    <p>Trading involves substantial risk of loss and isn't suitable for everyone. Most people who trade lose money. Nothing on
+      this page is financial advice. The results shown are individual results, not typical, and not a promise of what you will earn.</p>
+  </div>
+</footer>
+
+<dialog class="zoom" id="zoom"><img alt=""></dialog>
+
+<script src="/assets/vimeo-player.min.js"></script>
+<script src="/assets/lead-form.js"></script>
+<script src="/redesign/funnel.js"></script>
+</body>
+</html>
