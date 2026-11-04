@@ -1010,7 +1010,8 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 
     <h2 class="step"><b>Step #1:</b> Watch This 2 Minute Video For Next Steps</h2>
 
-    <div class="video" data-video="nextSteps">
+    <!-- The thank-you video is 4:3; the box takes the real shape from Vimeo once it loads (see fitVideoShape). -->
+    <div class="video" data-video="nextSteps" style="aspect-ratio: 4 / 3; max-width: 640px">
       <div class="video__ph">
         <span class="video__tag">Video placeholder</span>
         <span class="video__name">Post-booking video · lays out pre-call steps</span>
@@ -1038,7 +1039,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
         </div>
       </section>
       <section class="faq">
-        <h3>Is <span data-fill="brand">Jean Ivan</span> Legit?</h3>
+        <h3>Is JeanFX Legit?</h3>
         <div class="video" data-video="faqLegit">
           <div class="video__ph">
             <span class="video__tag">Video placeholder</span>
@@ -1064,6 +1065,16 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
             <span class="video__tag">Video placeholder</span>
             <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
             <span class="video__name">FAQ · Time with a full-time job</span>
+          </div>
+        </div>
+      </section>
+      <section class="faq">
+        <h3>How Much Money Do I Need To Start Trading?</h3>
+        <div class="video" data-video="faqMoney">
+          <div class="video__ph">
+            <span class="video__tag">Video placeholder</span>
+            <button class="video__play" type="button" aria-label="Play FAQ video"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <span class="video__name">FAQ · How much money you need</span>
           </div>
         </div>
       </section>
@@ -1119,11 +1130,12 @@ const CONFIG = {
   videos: {
     // Vimeo links get the player's title, profile picture, name and logo turned off automatically.
     vsl: "https://player.vimeo.com/video/1242132867",
-    nextSteps: "",
+    nextSteps: "https://player.vimeo.com/video/1243210921",   // thank-you video on /booked (4:3)
     faqInside: "",
-    faqLegit: "",
-    faqWho: "",
-    faqTime: ""
+    faqLegit: "https://player.vimeo.com/video/1243211359",
+    faqWho: "https://player.vimeo.com/video/1243211357",
+    faqTime: "https://player.vimeo.com/video/1243211356",
+    faqMoney: "https://player.vimeo.com/video/1243211358"
   },
 
   // A/B test for page 2: share of new opt-ins sent to /apply (V1). The rest go to /apply-2 (V2).
@@ -1300,6 +1312,7 @@ function videoControls(box, autoplay) {
   // seconds of playback too, and any caption line that appears switches them off on the spot.
   const noCaptions = () => player.disableTextTrack().catch(() => {});
   player.ready().then(noCaptions).catch(() => {});
+  fitVideoShape(box, player);
   ["loaded", "play", "volumechange"].forEach(ev => player.on(ev, noCaptions));
   player.on("texttrackchange", d => { if (d && (d.language || d.kind)) noCaptions(); });
   player.on("cuechange", d => { if (d && d.cues && d.cues.length) noCaptions(); });
@@ -1383,9 +1396,19 @@ function videoControls(box, autoplay) {
   });
 }
 
+// The box takes the video's own shape (e.g. the 4:3 thank-you video), at most 480px tall on wide screens
+// so a taller video doesn't take over the page.
+function fitVideoShape(box, player) {
+  Promise.all([player.getVideoWidth(), player.getVideoHeight()]).then(([w, h]) => {
+    if (!w || !h) return;
+    box.style.aspectRatio = w + " / " + h;
+    box.style.maxWidth = Math.round(480 * w / h) + "px";
+  }).catch(() => {});
+}
+
 // While they're on page 1, load the VSL player off-screen (after 10 s, or as soon as they start the form),
-// so its files are already cached when /apply or /apply-2 opens.
-function warmUpNextPage(videos = [CONFIG.videos.vsl]) {
+// so its files are already cached when /apply or /apply-2 opens. Page 2 does the same for the thank-you video.
+function warmUpNextPage(videos = [CONFIG.videos.vsl], onForm = true) {
   let done = false;
   const warm = () => {
     if (done) return;
@@ -1403,7 +1426,7 @@ function warmUpNextPage(videos = [CONFIG.videos.vsl]) {
   };
   const soon = () => (window.requestIdleCallback ? requestIdleCallback(warm, { timeout: 2000 }) : warm());
   setTimeout(soon, 10000);
-  $("#optin-form").addEventListener("focusin", soon, { once: true });
+  if (onForm) $("#optin-form").addEventListener("focusin", soon, { once: true });
 }
 $$(".video__play").forEach(btn => btn.addEventListener("click", () => btn.closest(".video").classList.toggle("is-playing")));
 $("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; });
@@ -1455,6 +1478,7 @@ function route() {
   }
   toast.active(VIEW === "optin");
   if (VIEW === "optin") warmUpNextPage();
+  if (VIEW === "apply" || VIEW === "apply2") warmUpNextPage([CONFIG.videos.nextSteps], false);
 }
 
 /* ---------- One-line headings ---------- */
