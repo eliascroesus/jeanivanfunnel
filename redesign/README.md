@@ -14,6 +14,7 @@ Everything for the trial is in this folder:
 - `style.css` holds the design.
 - `funnel.js` holds the behaviour (opt-in, application questions, GoHighLevel calendar, videos, results wall).
 - Each page is the `index.html` in its own folder.
+- `img/` holds the photos for Jean's story in "Meet Jean Ivan" (from the `jeanfx-vsl` repo, cropped and compressed).
 
 The pages use files the main funnel also uses, without changing them:
 

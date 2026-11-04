@@ -236,12 +236,12 @@ function videoControls(box, autoplay) {
     if (step) { e.preventDefault(); seek(parseFloat(fill.style.width || 0) / 100 + step); }
   });
 }
-// The box takes the video's own shape (e.g. the 4:3 thank-you video).
+// The box takes the video's own shape (e.g. the 4:3 thank-you video), at most 600px tall.
 function fitVideoShape(box, player) {
   Promise.all([player.getVideoWidth(), player.getVideoHeight()]).then(([w, h]) => {
     if (!w || !h) return;
     box.style.aspectRatio = w + " / " + h;
-    if (h > w * .6) box.style.maxWidth = Math.round(480 * w / h) + "px";
+    if (h > w * .6) box.style.maxWidth = Math.round(600 * w / h) + "px";
   }).catch(() => {});
 }
 
@@ -411,7 +411,6 @@ if (PAGE === "apply") {
     }
     if (!last) return show(index + 1);
     quiz.hidden = true;
-    $("#book .preframe").hidden = true;
     if (CONFIG.disqualify.includes(answers.investment)) {
       $("#nq").hidden = false;
       $("#cal").remove();
@@ -419,7 +418,7 @@ if (PAGE === "apply") {
       initCalendar();
       $("#cal").classList.add("is-open");
     }
-    $("#book .book-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    $(".book-panel").scrollIntoView({ behavior: "smooth", block: "start" });
   };
   form.addEventListener("submit", e => e.preventDefault());
   form.addEventListener("click", e => {
@@ -471,7 +470,7 @@ if (PAGE === "booked") {
   mountVideo($("#next-steps"), CONFIG.videos.nextSteps, { autoplay: true, title: "Next steps" });
   const grid = $("#faq-videos");
   grid.innerHTML = CONFIG.faqVideos.filter(([, url]) => url).map(([q], i) =>
-    `<article class="vid-card"><div class="vslframe" data-faq="${i}"></div><div class="vmeta"><h3>${esc(q)}</h3><p>Jean Ivan answers</p></div></article>`).join("");
+    `<article class="vid-card"><h3>${esc(q)}</h3><div class="vslframe" data-faq="${i}"></div></article>`).join("");
   $$("[data-faq]", grid).forEach((box, i) => {
     const [q, url] = CONFIG.faqVideos.filter(([, u]) => u)[i];
     mountVideo(box, url, { title: q });
