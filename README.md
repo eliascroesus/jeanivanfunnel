@@ -46,9 +46,10 @@ time are then filled into that person's row, matched by email:
 | Page | Columns filled |
 | --- | --- |
 | Opt-in (`/discord`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
-| V1 (`/apply`) | Instagram, Experience, Main Reason, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
-| V2 (`/apply-2`) | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
-| Calendly booking | Call Booked At |
+| V1 (`/apply`) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
+| V2 (`/apply-2`) and `/waitlist` | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
+| Booking a call | Call Booked At |
+| GoHighLevel | Sent To GHL (when the row was sent; empty = not sent yet) |
 
 The "Version" column shows which page 2 (V1 or V2) each lead got, so the two can be compared.
 Setup steps are at the top of `lead-capture.gs`. The Web app URL goes in `leadSheetUrl` in the
@@ -56,29 +57,61 @@ Setup steps are at the top of `lead-capture.gs`. The Web app URL goes in `leadSh
 
 ## Leads to GoHighLevel
 
-The same Apps Script also sends every lead to GoHighLevel through its API (free, unlike the premium
-Inbound Webhook trigger). It's off until the script has two Script properties, `GHL_TOKEN` (a sub-account
-Private Integration token) and `GHL_LOCATION_ID`; run `checkGhl` in the script editor to see what it found.
+The same Apps Script sends every lead to Jean's GoHighLevel sub-account through its API, the same way as the
+Ricky funnel (free, unlike the premium Inbound Webhook trigger). It's off until the script has two Script
+properties, `GHL_TOKEN` (a sub-account Private Integration token) and `GHL_LOCATION_ID`; run `checkGhl` in the
+script editor, or use the sheet's **GoHighLevel → Check the connection**, to see what it found.
 
 - Every event creates or updates the contact (name, email, phone, country) and fills any contact custom
-  field whose name matches a sheet column header, e.g. "Instagram", "Investment", "Main Problem".
-- These funnel steps also add a tag and set the opportunity's stage in the **JFX Elite** pipeline. Stages
-  are matched by name and only move forward; stages added by hand (Showed, Won…) are never moved back.
+  field whose name matches a sheet column header, e.g. "Instagram", "Investment", "Main Goal".
+- Opportunity custom fields with the same names are filled too. Lead cards in a pipeline can only show
+  opportunity fields, so create the ones you want on cards (e.g. Instagram, Investment, Situation) as Opportunity fields.
+- These funnel steps also add a tag and put the lead's opportunity in a pipeline. It's one opportunity per
+  lead: opt-ins land in **Discord** for the setters, and booking a call moves that same opportunity into
+  **1:1 Mentorship**. It only ever moves forward, so stages a setter or closer moved someone to by hand are never undone.
 
-| Funnel step | Stage | Tag |
+| Funnel step | Pipeline / stage | Tag |
 | --- | --- | --- |
-| Opt-in on `/discord` | Opted In | `jfx-optin` |
-| Finished the waiting list | Waitlist | `jfx-waitlist` |
-| Finished an application | Applied | `jfx-applied` |
-| "Don't qualify" investment answer | Not Qualified | `jfx-not-qualified` |
-| Calendly booking | Call Booked | `jfx-booked` |
+| Opt-in on `/discord` | Discord / first stage | `jean-optin` |
+| Finished the waiting list | Discord / Waitlist, plus a note with every answer | `jean-waitlist` |
+| Finished an application (`/apply` or `/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
+| "Don't qualify" investment answer | Discord / Not Qualified, plus a note with every answer | `jean-not-qualified` |
+| Booked a call | 1:1 Mentorship / first stage | `jean-booked` |
 
-The page marks a finished application with a `stage` field; single answers only update the contact's fields.
-Pipeline, stage and tag names live in `GHL_PIPELINE` and `GHL_STEPS` at the bottom of `lead-capture.gs`.
+The page marks a finished application with a `stage` field; single answers only update the contact's fields, so
+someone who stops part way through the waiting list is a contact with their answers but no tag or stage yet.
+Pipeline names, stages and tags live in `GHL_PIPELINES` and `GHL_STEPS` in `lead-capture.gs`.
+
+### Leads already in the sheet
+
+New leads go to GoHighLevel as they come in, and their row gets a time in **Sent To GHL**. Rows from before
+GoHighLevel was set up stay empty there and are only sent when you choose to, from the menu the script adds to
+the sheet (reload the sheet once after pasting the script):
+
+- **GoHighLevel → Preview old leads (sends nothing)** counts them by funnel step.
+- **GoHighLevel → Push old leads to GoHighLevel** asks to confirm, then sends each one to the furthest step it
+  reached, with the tags of every step on the way and the answers note. They also get `jean-imported` first, so a
+  workflow can leave them out (filter "Contact Tag doesn't have jean-imported"). It's safe to run again: sent rows are skipped.
+
+An old lead who comes back (finishes an application, books a call) is sent whole at that moment, as a live lead.
+A send that fails leaves Sent To GHL empty, so the push picks it up later.
+
+### Booking calendar
+
+Page 2 shows a GoHighLevel calendar when `ghlCalendarUrl` in `CONFIG` has its link (Calendars → the calendar's ⋮
+→ Share → Permanent link); until then it keeps Calendly. The page fills in the calendar's name, email and phone,
+and moves to `/booked` when GoHighLevel reports the booking. Bookings in the GoHighLevel calendar also start its
+"Customer Booked Appointment" workflows (confirmation texts, reminders, the Telegram alert below); Calendly bookings don't.
+
+### Telegram alerts
+
+Booked calls can be posted to a Telegram group with the lead's answers: add `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`
+and `WEBHOOK_KEY` as Script properties, run `checkTelegram`, then add a GoHighLevel workflow "Customer Booked
+Appointment" → **Webhook** (POST) to `<Web app URL>?source=ghl-booked&key=<WEBHOOK_KEY>`. Details are at the bottom of `lead-capture.gs`.
 
 ## Editing
 
-Brand name, videos, the Calendly link and the sheet URL are all in the `CONFIG` block. To swap a video
+Brand name, videos, the calendar links (GoHighLevel or Calendly) and the sheet URL are all in the `CONFIG` block. To swap a video
 placeholder for a real video, paste its embed link into `CONFIG.videos`.
 
 Vimeo videos play the same way as in the Ricky funnel: Vimeo's title, picture, name, logo, share buttons and
