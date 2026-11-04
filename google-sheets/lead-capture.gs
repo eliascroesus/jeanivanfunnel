@@ -358,7 +358,7 @@ function ghlUpsertContact_(ghl, setup, params) {
   const [firstName, ...rest] = tidyName_(params.name).split(' ');
   if (firstName) body.firstName = firstName;
   if (rest.length) body.lastName = rest.join(' ');
-  const phone = e164_(params.phone);
+  const phone = e164_(params.phone, params.timezone);
   if (phone) body.phone = phone;
   if (/^[A-Z]{2}$/.test(params.country || '')) body.country = params.country;
   if (params.version) body.source = 'Jean funnel ' + params.version;
@@ -424,14 +424,44 @@ function ghlMoveOpportunity_(ghl, setup, contactId, params, step) {
 }
 
 // "+1 5551234567" → "+15551234567". If they typed their own "+44…" in the number box, that one wins.
-// With no "+" at all, the digits go as they are.
-function e164_(phone) {
+// With no "+" at all (early waiting-list rows, e.g. "7947275612"), the country code comes from their time zone
+// ("Europe/London" → +447947275612); for a time zone not in TZ_CALLING_CODES the digits go as they are.
+function e164_(phone, timezone) {
   const text = String(phone || '');
   const plus = text.lastIndexOf('+');
-  const digits = (plus < 0 ? text : text.slice(plus)).replace(/\D/g, '');
+  let digits = (plus < 0 ? text : text.slice(plus)).replace(/\D/g, '');
   if (digits.length < 7) return '';
-  return plus < 0 ? digits : '+' + digits;
+  if (plus >= 0) return '+' + digits;
+  if (digits.startsWith('00')) return '+' + digits.slice(2);   // "0044…"
+  const code = TZ_CALLING_CODES[String(timezone || '').trim()];
+  if (!code) return digits;
+  if (code === '1') return '+' + (digits.length === 11 && digits[0] === '1' ? digits : '1' + digits);
+  if (digits.startsWith(code) && digits.length >= 11) return '+' + digits;   // code typed without the "+"
+  return '+' + code + digits.replace(/^0/, '');   // national number: "07947…" → "+447947…"
 }
+// Time zone → country calling code, for numbers saved without one. Only zones that are a single country.
+const TZ_CALLING_CODES = {
+  'America/New_York': '1', 'America/Chicago': '1', 'America/Denver': '1', 'America/Los_Angeles': '1',
+  'America/Phoenix': '1', 'America/Anchorage': '1', 'America/Detroit': '1', 'America/Indiana/Indianapolis': '1',
+  'Pacific/Honolulu': '1', 'America/Toronto': '1', 'America/Vancouver': '1', 'America/Edmonton': '1',
+  'America/Winnipeg': '1', 'America/Halifax': '1', 'America/Regina': '1', 'America/Jamaica': '1',
+  'America/Puerto_Rico': '1', 'America/Port_of_Spain': '1', 'America/Nassau': '1', 'America/Barbados': '1',
+  'Europe/London': '44', 'Europe/Dublin': '353', 'Europe/Berlin': '49', 'Europe/Paris': '33',
+  'Europe/Amsterdam': '31', 'Europe/Brussels': '32', 'Europe/Madrid': '34', 'Europe/Lisbon': '351',
+  'Europe/Zurich': '41', 'Europe/Vienna': '43', 'Europe/Copenhagen': '45', 'Europe/Stockholm': '46',
+  'Europe/Oslo': '47', 'Europe/Helsinki': '358', 'Europe/Warsaw': '48', 'Europe/Athens': '30',
+  'Europe/Istanbul': '90', 'Europe/Bucharest': '40',
+  'Africa/Casablanca': '212', 'Africa/Algiers': '213', 'Africa/Tunis': '216', 'Africa/Tripoli': '218',
+  'Africa/Cairo': '20', 'Africa/Lagos': '234', 'Africa/Accra': '233', 'Africa/Nairobi': '254',
+  'Africa/Kampala': '256', 'Africa/Dar_es_Salaam': '255', 'Africa/Addis_Ababa': '251', 'Africa/Kigali': '250',
+  'Africa/Johannesburg': '27', 'Africa/Harare': '263', 'Africa/Lusaka': '260', 'Africa/Mogadishu': '252',
+  'Africa/Khartoum': '249', 'Africa/Dakar': '221', 'Africa/Abidjan': '225', 'Africa/Douala': '237',
+  'Asia/Dubai': '971', 'Asia/Riyadh': '966', 'Asia/Qatar': '974', 'Asia/Kuwait': '965', 'Asia/Karachi': '92',
+  'Asia/Kolkata': '91', 'Asia/Calcutta': '91', 'Asia/Manila': '63', 'Asia/Singapore': '65',
+  'Australia/Sydney': '61', 'Australia/Melbourne': '61', 'Australia/Brisbane': '61', 'Australia/Perth': '61',
+  'Australia/Adelaide': '61', 'Pacific/Auckland': '64',
+  'America/Sao_Paulo': '55', 'America/Mexico_City': '52', 'America/Bogota': '57', 'America/Paramaribo': '597',
+};
 
 function norm_(text) {
   return String(text || '').trim().toLowerCase();
