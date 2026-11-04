@@ -26,7 +26,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://assets.calendly.com">
 <link rel="preconnect" href="https://calendly.com">
-<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,700;0,800;1,700;1,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
 <script>
   // Pick the page from the URL before anything draws, so /apply never flashes page 1.
@@ -593,6 +592,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 @media (min-width: 761px) {
   .tf__cal .cal-embed { --cal-crop-top: 66px; }
   .tf__cal .cal-embed iframe { display: block; margin-top: calc(-1 * var(--cal-crop-top)); height: calc(100% + var(--cal-crop-top)) !important; }
+  .tf__cal .cal-embed.is-ghl { --cal-crop-top: 0px; }
 }
 /* While the questions are on screen, Calendly sits behind them fully see-through. Not visibility: hidden:
    browsers pause drawing inside hidden frames, so it would only finish loading once shown. */
@@ -1149,7 +1149,12 @@ const CONFIG = {
   // Discord invite link for the button on /not-qualified. Leave "" to tell them to check their email + SMS.
   discordUrl: "",
 
-  // Calendly booking page shown on page 2. The "hide_*" options strip Calendly's own text.
+  // GoHighLevel calendar shown on page 2: the calendar's booking link, e.g.
+  // "https://api.leadconnectorhq.com/widget/booking/AbC123…" (Calendars → the calendar's ⋮ → Share → Permanent link).
+  // When it's filled in, it replaces Calendly. Leave "" to keep Calendly.
+  ghlCalendarUrl: "",
+
+  // Calendly booking page shown on page 2 (when ghlCalendarUrl is ""). The "hide_*" options strip Calendly's own text.
   calendlyUrl: "https://calendly.com/eliascroesus/strategy-call?hide_event_type_details=1&hide_landing_page_details=1&hide_gdpr_banner=1",
 
   // "Just joined" toast. PLACEHOLDER DATA — feed this from real opt-ins (your CRM / Discord bot)
@@ -1254,9 +1259,17 @@ const PROOF = [
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// Saved in the browser for 30 days, so a reload or coming back later in a new tab keeps what they entered.
+const STORE_DAYS = 30;
 const store = {
-  get(k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } },
-  set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  get(k) {
+    try {
+      const saved = JSON.parse(localStorage.getItem("jeanivan_" + k));
+      if (saved && Date.now() - saved.at < STORE_DAYS * 864e5) return saved.v;
+      return JSON.parse(sessionStorage.getItem(k));   // from before this was kept in localStorage
+    } catch { return null; }
+  },
+  set(k, v) { try { localStorage.setItem("jeanivan_" + k, JSON.stringify({ v, at: Date.now() })); } catch {} }
 };
 
 // Fill brand / program / spots text
@@ -1406,9 +1419,10 @@ function fitVideoShape(box, player) {
   }).catch(() => {});
 }
 
-// While they're on page 1, load the VSL player off-screen (after 10 s, or as soon as they start the form),
-// so its files are already cached when /apply or /apply-2 opens. Page 2 does the same for the thank-you video.
-function warmUpNextPage(videos = [CONFIG.videos.vsl], onForm = true) {
+// While they're on page 1, load the VSL player and the GoHighLevel calendar off-screen (after 10 s, or as soon
+// as they start the form), so their files are already cached when /apply or /apply-2 opens. Page 2 does the
+// same for the thank-you video. Nothing plays: no video streams yet.
+function warmUpNextPage(videos = [CONFIG.videos.vsl, CONFIG.ghlCalendarUrl], onForm = true) {
   let done = false;
   const warm = () => {
     if (done) return;
@@ -1511,11 +1525,24 @@ document.fonts?.ready.then(fitHeadings);   // web fonts are wider than the fallb
 /* ---------- Lead data (opt-in → application prefill) ---------- */
 let lead = store.get("lead") || {};
 const qs = new URLSearchParams(location.search);   // UTM-style prefill: ?name=&email=&phone=
+// UTMs (from the latest link that had them) and the referring site are remembered, so they still reach
+// the sheet if the person reloads, or comes back later without the ?utm_… in the link.
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+const tracking = (() => {
+  const saved = store.get("tracking") || {};
+  const fromLink = Object.fromEntries(UTM_KEYS.map(k => [k, qs.get(k) || ""]).filter(([, v]) => v));
+  let external = "";
+  try { external = document.referrer && new URL(document.referrer).host !== location.host ? document.referrer : ""; } catch {}
+  const now = { ...(Object.keys(fromLink).length ? fromLink : pickUtms(saved)), referrer: external || saved.referrer || "" };
+  store.set("tracking", now);
+  return now;
+  function pickUtms(o) { return Object.fromEntries(UTM_KEYS.map(k => [k, o[k] || ""]).filter(([, v]) => v)); }
+})();
 ["name", "email", "phone"].forEach(k => { const v = qs.get(k) || (k === "name" && qs.get("first_name")); if (v) lead[k] = v; });
 
 function prefillApply() {
   checkApply();
-  initCalendly($("#cal-embed"));   // start loading Calendly behind the blur right away
+  initCalendar($("#cal-embed"));   // start loading the calendar behind the blur right away
 }
 
 /* ---------- Send to the Google Sheet ---------- */
@@ -1528,12 +1555,8 @@ function sendLead(data, type = "optin") {
     type,
     funnel: document.title,
     page_url: location.href.split("#")[0],
-    utm_source: qs.get("utm_source") || "",
-    utm_medium: qs.get("utm_medium") || "",
-    utm_campaign: qs.get("utm_campaign") || "",
-    utm_content: qs.get("utm_content") || "",
-    utm_term: qs.get("utm_term") || "",
-    referrer: document.referrer,
+    ...Object.fromEntries(UTM_KEYS.map(k => [k, tracking[k] || ""])),
+    referrer: tracking.referrer || document.referrer,
     device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ""
   });
@@ -1543,10 +1566,18 @@ function sendLead(data, type = "optin") {
 
 /* ---------- Opt-in form ---------- */
 const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+// "jordan lee" or "JORDAN LEE" → "Jordan Lee", so emails and texts say "Hey Jordan". Names typed with their
+// own capitals ("McKenzie", "de la Cruz") are left exactly as typed.
+function tidyName(raw) {
+  const name = String(raw || "").trim().replace(/\s+/g, " ");
+  if (name !== name.toLowerCase() && name !== name.toUpperCase()) return name;
+  return name.toLowerCase().replace(/(^|[\s\-'’])(\p{L})/gu, (m, sep, ch) => sep + ch.toUpperCase());
+}
 $("#optin-form").addEventListener("submit", e => {
   e.preventDefault();
   const f = e.currentTarget;
-  const name = f.name.value.trim(), phone = f.phone.value.trim(), email = f.email.value.trim();
+  f.name.value = tidyName(f.name.value);
+  const name = f.name.value, phone = f.phone.value.trim(), email = f.email.value.trim();
   const bad = [];
   f.name.setAttribute("aria-invalid", !name); if (!name) bad.push("your name");
   f.phone.setAttribute("aria-invalid", phone.replace(/\D/g, "").length < 7); if (phone.replace(/\D/g, "").length < 7) bad.push("a phone number");
@@ -1711,7 +1742,7 @@ function initTypeform() {
   const phoneStep = tfQuestions.findIndex(q => q.type === "phone");
   if (phoneStep >= 0) phoneUi.attach(tfSteps[phoneStep]);
   tfShow(0);
-  if (VIEW === "apply2") initCalendly($("#tf-embed"));   // loads hidden now, so it's ready the moment the last answer is in
+  if (VIEW === "apply2") initCalendar($("#tf-embed"));   // loads hidden now, so it's ready the moment the last answer is in
 }
 function tfValue(i) {
   const q = tfQuestions[i];
@@ -1732,6 +1763,7 @@ function tfShow(i) {
   if (input && matchMedia("(hover: hover)").matches) input.focus({ preventScroll: true });
 }
 function tfNext() {
+  if (tfQuestions[tfIndex].key === "name") tfForm.elements.name.value = tidyName(tfForm.elements.name.value);
   const q = tfQuestions[tfIndex], err = tfSteps[tfIndex].querySelector(".tf__err"), value = tfValue(tfIndex);
   const problem = !value ? (q.type === "choice" ? "Please pick an answer." : "Please fill this in.")
     : q.check && !q.check(value) ? (typeof q.checkError === "function" ? q.checkError() : q.checkError) : "";
@@ -2010,27 +2042,65 @@ const phoneUi = (() => {
   return { html, attach, commit, error, close };
 })();
 
-/* ---------- Calendly ---------- */
-// Name and email come from the page 1 opt-in (or ?name=&email= in the link).
+/* ---------- Booking calendar (GoHighLevel, or Calendly) ---------- */
+// Name, email and phone come from the page 1 opt-in (or ?name=&email= in the link).
 function calendlyPrefill() {
   const name = (lead.name || "").trim().replace(/\s+/g, " ");
   const [firstName, ...rest] = name.split(" ");
   // Send both forms so the name fills in whether the event asks for "Name" or "First / Last name".
   return { name, firstName, lastName: rest.join(" "), email: (lead.email || "").trim() };
 }
-function initCalendly(el) {
+function initCalendar(el) {
   if (!el) return;
-  if (!window.Calendly) { setTimeout(() => initCalendly(el), 300); return; }   // widget.js loads async
   const prefill = calendlyPrefill();
   const key = prefill.name + "|" + prefill.email;
   if (key === el.dataset.calKey) return;
+  if (CONFIG.ghlCalendarUrl) {
+    el.dataset.calKey = key;
+    el.classList.add("is-ghl");
+    // GHL fills its booking form from these when the calendar has "pre-populate fields" on.
+    const u = new URL(CONFIG.ghlCalendarUrl);
+    const phone = (lead.phone || "").replace(/[^\d+]/g, "");
+    // The calendar's form requires a last name; someone who only gave a first name gets "-" so they
+    // don't get stuck on it (it only shows as "Jordan -" on the contact in GHL).
+    Object.entries({ first_name: prefill.firstName, last_name: prefill.lastName || (prefill.firstName ? "-" : ""), name: prefill.name, email: prefill.email, phone })
+      .forEach(([k, v]) => { if (v) u.searchParams.set(k, v); });
+    el.innerHTML = `<iframe src="${esc(u.href)}" title="Book your call" allow="payment" scrolling="yes" style="width:100%;height:100%;border:0;overflow:auto"></iframe>`;
+    return;
+  }
+  if (!window.Calendly) { loadCalendly(); setTimeout(() => initCalendar(el), 300); return; }
   el.dataset.calKey = key;
   el.innerHTML = "";
   Calendly.initInlineWidget({ url: CONFIG.calendlyUrl, parentElement: el, prefill });
 }
-// Calendly tells the page when a call is booked; then move on to page 3.
+// Calendly's script only loads when Calendly is the calendar in use.
+function loadCalendly() {
+  if (document.querySelector('script[src*="assets.calendly.com"]')) return;
+  const js = document.createElement("script");
+  js.src = "https://assets.calendly.com/assets/external/widget.js";
+  js.async = true;
+  document.head.appendChild(js);
+}
+// The calendar tells the page when a call is booked; then move on to page 3.
+// GHL sends ["msgsndr-booking-complete", {…}]; Calendly sends { event: "calendly.event_scheduled" }.
+// Add ?debug to the page link to see every message the calendar sends in the browser console.
+function isGhlBooking(e) {
+  if (!CONFIG.ghlCalendarUrl) return false;
+  let ghlHost = false;
+  try {
+    ghlHost = /(^|\.)(leadconnectorhq\.com|msgsndr\.com)$/.test(new URL(e.origin).hostname)
+      || e.origin === new URL(CONFIG.ghlCalendarUrl).origin;
+  } catch {}
+  const text = typeof e.data === "string" ? e.data : Array.isArray(e.data) ? String(e.data[0]) : "";
+  return ghlHost && /booking-complete/i.test(text);
+}
+let bookingSent = false;
 window.addEventListener("message", e => {
-  if (e.origin !== "https://calendly.com" || e.data?.event !== "calendly.event_scheduled") return;
+  if (/[?&]debug\b/.test(location.search)) console.log("[calendar message]", e.origin, e.data);
+  const calendly = e.origin === "https://calendly.com" && e.data?.event === "calendly.event_scheduled";
+  if (!calendly && !isGhlBooking(e)) return;
+  if (bookingSent) return;
+  bookingSent = true;
   const answers = VIEW === "apply2" ? typeformData() : applicationData();
   store.set("booking", { ...answers, bookedAt: Date.now() });
   sendLead(answers, "booked");
