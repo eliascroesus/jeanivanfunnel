@@ -73,13 +73,14 @@ script editor, or use the sheet's **GoHighLevel → Check the connection**, to s
 | Funnel step | Pipeline / stage | Tag |
 | --- | --- | --- |
 | Opt-in on `/discord` | Discord / first stage | `jean-optin` |
+| Gave name, email and phone on `/waitlist` | Discord / first stage | `jean-waitlist-started` |
 | Finished the waiting list | Discord / Waitlist, plus a note with every answer | `jean-waitlist` |
 | Finished an application (`/apply` or `/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
 | "Don't qualify" investment answer | Discord / Not Qualified, plus a note with every answer | `jean-not-qualified` |
 | Booked a call | 1:1 Mentorship / first stage | `jean-booked` |
 
-The page marks a finished application with a `stage` field; single answers only update the contact's fields, so
-someone who stops part way through the waiting list is a contact with their answers but no tag or stage yet.
+The page marks those steps with a `stage` field; other single answers only update the contact's fields. So someone
+who stops part way through the waiting list is still in the Discord pipeline for the setters, with the answers they gave.
 Pipeline names, stages and tags live in `GHL_PIPELINES` and `GHL_STEPS` in `lead-capture.gs`.
 
 ### Leads already in the sheet
@@ -98,9 +99,12 @@ A send that fails leaves Sent To GHL empty, so the push picks it up later.
 
 ### Booking calendar
 
-Page 2 shows a GoHighLevel calendar when `ghlCalendarUrl` in `CONFIG` has its link (Calendars → the calendar's ⋮
-→ Share → Permanent link); until then it keeps Calendly. The page fills in the calendar's name, email and phone,
-and moves to `/booked` when GoHighLevel reports the booking. Bookings in the GoHighLevel calendar also start its
+Page 2 shows Jean's GoHighLevel calendar, set in `ghlCalendarUrl` in `CONFIG` (Calendars → the calendar's ⋮ →
+Share → Permanent link). Empty it to go back to Calendly (`calendlyUrl`). The page fills in the calendar's name,
+email and phone, and moves to `/booked` when GoHighLevel reports the booking. The `/discord` phone box checks
+numbers against the same rules as the calendar (libphonenumber's, in `assets/lead-form.js`), so the calendar
+never rejects a number the opt-in accepted. On `/booked`, **Confirm In Gmail** opens their inbox searched for the
+confirmation email (`confirmFrom` / `confirmSubject` in `CONFIG`), and **Confirm In Outlook** opens Outlook on the web. Bookings in the GoHighLevel calendar also start its
 "Customer Booked Appointment" workflows (confirmation texts, reminders, the Telegram alert below); Calendly bookings don't.
 
 ### Telegram alerts

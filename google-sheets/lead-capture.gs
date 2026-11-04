@@ -191,6 +191,7 @@ function json_(obj) {
  * (lead cards in a pipeline can only show opportunity fields). On the funnel steps in GHL_STEPS it also adds that
  * step's tag and puts their opportunity in that step's pipeline and stage:
  *   - Opt-in on /discord   → the Discord pipeline, for the setters to reach out.
+ *   - Waitlist contact info → the Discord pipeline too (name, email, phone given), even if they stop there.
  *   - Finished waitlist    → Waitlist in Discord, plus a note with all their answers.
  *   - Application          → Applied (or Not Qualified) in Discord, plus a note with all their answers.
  *   - Booked a call        → the same opportunity moves over to the 1:1 Mentorship pipeline.
@@ -204,11 +205,12 @@ const GHL_PIPELINES = ['Discord', '1:1 Mentorship'];
 // Funnel step → pipeline, stage and tag. Stage names must match GHL (capitals aside);
 // leave a stage as '' to use the pipeline's first stage. If GHL doesn't have the stage, the first stage is used.
 const GHL_STEPS = {
-  optin:         { pipeline: 'Discord',        stage: '',              tag: 'jean-optin' },
-  waitlist:      { pipeline: 'Discord',        stage: 'Waitlist',      tag: 'jean-waitlist' },
-  applied:       { pipeline: 'Discord',        stage: 'Applied',       tag: 'jean-applied' },
-  not_qualified: { pipeline: 'Discord',        stage: 'Not Qualified', tag: 'jean-not-qualified' },
-  booked:        { pipeline: '1:1 Mentorship', stage: '',              tag: 'jean-booked' },
+  optin:            { pipeline: 'Discord',        stage: '',              tag: 'jean-optin' },
+  waitlist_started: { pipeline: 'Discord',        stage: '',              tag: 'jean-waitlist-started' },
+  waitlist:         { pipeline: 'Discord',        stage: 'Waitlist',      tag: 'jean-waitlist' },
+  applied:          { pipeline: 'Discord',        stage: 'Applied',       tag: 'jean-applied' },
+  not_qualified:    { pipeline: 'Discord',        stage: 'Not Qualified', tag: 'jean-not-qualified' },
+  booked:           { pipeline: '1:1 Mentorship', stage: '',              tag: 'jean-booked' },
 };
 // The application answers that go into the note on the contact, in this order.
 const GHL_NOTE_FIELDS = ['situation', 'experience', 'motivation', 'goal', 'reason', 'obstacles', 'ready', 'investment', 'instagram'];
@@ -483,18 +485,17 @@ function rowLead_(cells, rowNum) {
 
 // The funnel steps a sheet row shows they reached, in order. Like the funnel itself: a finished application
 // is one with an investment answer (the last question), and a waiting-list visitor who stopped part way
-// only gets a contact (no step).
+// is in the Discord pipeline's first stage, like an opt-in.
 function leadSteps_(lead) {
-  const steps = [];
-  if (lead.version !== 'Waitlist') steps.push('optin');
+  const steps = [lead.version === 'Waitlist' ? 'waitlist_started' : 'optin'];
   if (lead.investment) steps.push(DISQUALIFY.indexOf(lead.investment) >= 0 ? 'not_qualified' : lead.version === 'Waitlist' ? 'waitlist' : 'applied');
   if (lead['@booked']) steps.push('booked');
   return steps;
 }
 
 function stepCounts_(leads) {
-  const names = { optin: 'opted in only', waitlist: 'finished the waiting list', applied: 'applied',
-    not_qualified: 'not qualified', booked: 'booked a call', '': 'started the waiting list (contact only)' };
+  const names = { optin: 'opted in only', waitlist_started: "started the waiting list but didn't finish",
+    waitlist: 'finished the waiting list', applied: 'applied', not_qualified: 'not qualified', booked: 'booked a call', '': 'contact only' };
   const counts = {};
   leads.forEach(l => { const last = l.steps[l.steps.length - 1] || ''; counts[last] = (counts[last] || 0) + 1; });
   return Object.keys(counts).map(k => '  ' + counts[k] + ' ' + names[k] + (k ? ' → ' + GHL_STEPS[k].pipeline + ' / ' + (GHL_STEPS[k].stage || 'first stage') : ''));
