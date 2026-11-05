@@ -332,6 +332,7 @@ if (PAGE === "discord") {
     saveDraft();
     store.set("lead", lead);
     sendLead({ name, email, phone: p.e164, country: p.country });
+    try { sessionStorage.setItem("jeanivan_just_joined", "1"); } catch {}
     go("apply");
   });
   // Load the next page's video player and calendar in hidden frames once they start the form, so /apply opens fast.
@@ -350,6 +351,8 @@ if (PAGE === "discord") {
 /* /redesign/apply: VSL, then the application, then the calendar            */
 /* ======================================================================= */
 if (PAGE === "apply") {
+  // They just joined: a short burst of gold confetti, once.
+  try { if (sessionStorage.getItem("jeanivan_just_joined")) { sessionStorage.removeItem("jeanivan_just_joined"); confetti(); } } catch {}
   mountVideo($("#vsl"), CONFIG.videos.vsl, { autoplay: true, title: "Watch this first" });
   const quiz = $("#quiz"), form = $("#quiz-form"), bar = $("#quiz-bar"), back = $("#quiz-back");
   const knowThem = !!(lead.name && lead.email && lead.phone);
@@ -435,6 +438,40 @@ if (PAGE === "apply") {
 
   const nqBtn = $("#nq-discord");
   if (nqBtn) nqBtn.href = CONFIG.discordUrl;
+}
+
+/* ---------- Gold confetti (about 2 seconds, skipped for people who turn motion off) ---------- */
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.createElement("canvas"), ctx = c.getContext("2d"), dpr = Math.min(devicePixelRatio || 1, 2);
+  c.className = "confetti"; c.setAttribute("aria-hidden", "true");
+  document.body.appendChild(c);
+  const size = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; };
+  size();
+  const colors = ["#f5d90a", "#ffe94d", "#fff3a8", "#d4ba00", "#ffffff"];
+  const bits = Array.from({ length: 160 }, (_, i) => {
+    const fromLeft = i % 2 === 0, angle = (fromLeft ? -60 : -120) + (Math.random() - .5) * 50;
+    const speed = (9 + Math.random() * 10) * dpr;
+    return {
+      x: (fromLeft ? .08 : .92) * c.width, y: c.height * .75,
+      vx: Math.cos(angle * Math.PI / 180) * speed, vy: Math.sin(angle * Math.PI / 180) * speed,
+      w: (6 + Math.random() * 6) * dpr, h: (3 + Math.random() * 4) * dpr,
+      r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3, color: colors[i % colors.length],
+    };
+  });
+  const start = performance.now();
+  const frame = now => {
+    const t = now - start;
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.globalAlpha = Math.max(0, 1 - Math.max(0, t - 1500) / 700);
+    bits.forEach(b => {
+      b.vy += .35 * dpr; b.vx *= .99; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.fillStyle = b.color;
+      ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.restore();
+    });
+    if (t < 2200) requestAnimationFrame(frame); else c.remove();
+  };
+  requestAnimationFrame(frame);
 }
 
 /* ---------- GoHighLevel calendar ---------- */
