@@ -47,7 +47,7 @@ h1, h2 { text-shadow: 0 2px 18px rgba(0, 0, 0, .75); }
   background: radial-gradient(640px 72% at 50% 46%, rgba(0, 0, 0, .78) 0%, rgba(0, 0, 0, .45) 55%, transparent 88%);
 }
 @media (max-width: 760px) {
-  .bg svg { opacity: .55; }
+  .bg svg { display: none; }
   .bg::after { background: radial-gradient(95% 62% at 42% 46%, rgba(0, 0, 0, .8) 0%, rgba(0, 0, 0, .42) 60%, transparent 92%); }
 }
 h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; letter-spacing: -1px; }
@@ -124,7 +124,7 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
   position: relative; width: 100%; max-width: 960px; margin: 0 auto; aspect-ratio: 16 / 9;
   border-radius: 18px; overflow: hidden;
   background: linear-gradient(160deg, var(--panel-2), var(--steel)); border: 4px solid var(--accent);
-  box-shadow: 0 0 0 5px rgba(var(--accent-rgb), .1), 0 0 28px rgba(var(--accent-rgb), .28), 0 0 80px rgba(var(--accent-rgb), .1), 0 30px 80px -30px rgba(0, 0, 0, .85);
+  box-shadow: 0 0 0 6px rgba(var(--accent-rgb), .13), 0 0 40px rgba(var(--accent-rgb), .45), 0 0 110px rgba(var(--accent-rgb), .18), 0 30px 80px -30px rgba(0, 0, 0, .85);
 }
 .vslframe iframe, .vslframe video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .vslframe.has-embed { background: #000; }
@@ -187,7 +187,7 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
 .form-card, .book-panel {
   margin: 0 auto; text-align: left; color: #111; background: #fff;
   border: 3px solid var(--accent); border-radius: 20px;
-  box-shadow: 0 0 0 5px rgba(var(--accent-rgb), .1), 0 0 30px rgba(var(--accent-rgb), .22), 0 30px 80px -30px rgba(0, 0, 0, .85);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .85);
 }
 .form-card { max-width: 540px; padding: 30px 28px 26px; }
 .form-card h2 { font-size: clamp(25px, 3.2vw, 31px); letter-spacing: -.6px; text-align: center; margin-bottom: 18px; text-shadow: none; }
@@ -333,7 +333,6 @@ body[data-page="discord"] .hero { background: none; }
 body[data-page="discord"] .accent { text-shadow: none; }
 body[data-page="discord"] .kicker, body[data-page="discord"] .story-card .when, body[data-page="discord"] .story-stat b { text-shadow: none; }
 body[data-page="discord"] .hl { box-shadow: none; }
-body[data-page="discord"] .form-card { box-shadow: 0 0 0 5px rgba(var(--accent-rgb), .08), 0 0 24px rgba(var(--accent-rgb), .15), 0 30px 80px -30px rgba(0, 0, 0, .85); }
 body[data-page="discord"] .tshot, body[data-page="discord"] .story-card { box-shadow: none; border-color: rgba(255, 255, 255, .1); }
 .results-under-form { padding-top: 6px; }
 
