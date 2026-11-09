@@ -6,8 +6,12 @@
 
 const CONFIG = {
   leadSheetUrl: "https://script.google.com/macros/s/AKfycbz5Kit_1dN9WRHCtjC8Idq49u2c5Rr9KMBf1MVEqUjxsxbIX2DWplN-WWwAhCSNyPob/exec",
-  version: "Redesign",
-  pages: { discord: "/discord", apply: "/apply", booked: "/booked" },
+  // The sheet's Version column: which page 2 the lead got, so the two can be compared.
+  versions: { apply: "Redesign", apply2: "Redesign 2" },
+  // A/B test: share of new opt-ins sent to /apply (one question at a time). The rest go to /apply-2 (the form
+  // beside the calendar). Each visitor keeps the one they got. ?v=1 or ?v=2 in a link picks one; ?v=reset forgets it.
+  abSplitApply: 0.5,
+  pages: { discord: "/discord", apply: "/apply", apply2: "/apply-2", booked: "/booked" },
   videos: {
     vsl: "https://player.vimeo.com/video/1242132867",
     nextSteps: "https://player.vimeo.com/video/1243210921",
@@ -122,9 +126,22 @@ const tracking = (() => {
   return now;
 })();
 
-// Moves to another page, keeping ?utm_… and other link options.
+// Moves to another page, keeping ?utm_… and other link options (but not ?v=reset, so a reset only happens once).
 function go(page) {
-  location.href = CONFIG.pages[page] + location.search;
+  const q = new URLSearchParams(location.search);
+  if (q.get("v") === "reset") q.delete("v");
+  location.href = CONFIG.pages[page] + (q.toString() ? "?" + q : "");
+}
+
+// Which page 2 this visitor gets ("apply" or "apply2"): picked once at random, then remembered.
+function abPage() {
+  const v = qs.get("v");
+  try { if (v === "reset") localStorage.removeItem("jeanivan_ab_page"); } catch {}
+  let page = v === "1" ? "apply" : v === "2" ? "apply2" : "";
+  try { page = page || localStorage.getItem("jeanivan_ab_page") || ""; } catch {}
+  if (!CONFIG.versions[page]) page = Math.random() < CONFIG.abSplitApply ? "apply" : "apply2";
+  try { localStorage.setItem("jeanivan_ab_page", page); } catch {}
+  return page;
 }
 
 /* ---------- Send to the Google Sheet (and from there to GoHighLevel) ---------- */
@@ -133,7 +150,7 @@ function sendLead(data, type = "optin") {
   if (!CONFIG.leadSheetUrl) return;
   const body = new URLSearchParams({
     ...data,
-    version: CONFIG.version,
+    version: data.version || CONFIG.versions[PAGE] || CONFIG.versions.apply,
     type,
     funnel: document.title,
     page_url: location.href.split("#")[0],
@@ -331,11 +348,12 @@ if (PAGE === "discord") {
     lead = { name, email, phone: p.e164, phoneNational: form.phone.value.trim(), country: p.country };
     saveDraft();
     store.set("lead", lead);
-    sendLead({ name, email, phone: p.e164, country: p.country });
+    const next = abPage();
+    sendLead({ name, email, phone: p.e164, country: p.country, version: CONFIG.versions[next] });
     try { sessionStorage.setItem("jeanivan_just_joined", "1"); } catch {}
-    go("apply");
+    go(next);
   });
-  // Load the next page's video player and calendar in hidden frames once they start the form, so /apply opens fast.
+  // Load the next page's video player and calendar in hidden frames once they start the form, so page 2 opens fast.
   form.addEventListener("focusin", () => setTimeout(() => {
     [vimeoEmbedUrl(CONFIG.videos.vsl, true, false).href, CONFIG.ghlCalendarUrl].filter(Boolean).forEach(src => {
       const f = document.createElement("iframe");
@@ -350,10 +368,14 @@ if (PAGE === "discord") {
 /* ======================================================================= */
 /* /apply: VSL, then the application, then the calendar            */
 /* ======================================================================= */
-if (PAGE === "apply") {
+if (PAGE === "apply" || PAGE === "apply2") {
   // They just joined: a short burst of gold confetti, once.
   try { if (sessionStorage.getItem("jeanivan_just_joined")) { sessionStorage.removeItem("jeanivan_just_joined"); confetti(); } } catch {}
   mountVideo($("#vsl"), CONFIG.videos.vsl, { autoplay: true, title: "Watch this first" });
+  const nqBtn = $("#nq-discord");
+  if (nqBtn) nqBtn.href = CONFIG.discordUrl;
+}
+if (PAGE === "apply") {
   const quiz = $("#quiz"), form = $("#quiz-form"), bar = $("#quiz-bar"), back = $("#quiz-back");
   const knowThem = !!(lead.name && lead.email && lead.phone);
   const steps = knowThem ? QUESTIONS : [...CONTACT_QUESTIONS, ...QUESTIONS];
@@ -435,9 +457,6 @@ if (PAGE === "apply") {
   back.addEventListener("click", () => { if (index > 0) show(index - 1); });
   show(0);
   if (knowThem) initCalendar();   // loads hidden now, so it's ready the moment the last answer is in
-
-  const nqBtn = $("#nq-discord");
-  if (nqBtn) nqBtn.href = CONFIG.discordUrl;
 }
 
 /* ---------- Gold confetti (about 2 seconds, skipped for people who turn motion off) ---------- */
@@ -474,6 +493,66 @@ function confetti() {
   requestAnimationFrame(frame);
 }
 
+/* ======================================================================= */
+/* /apply-2: VSL, then a short form beside the calendar (iClose style)       */
+/* ======================================================================= */
+// The calendar sits blurred and locked beside the form and opens once every answer is in. Visitors who didn't
+// come through /discord also give name, email and phone at the top; that counts as their opt-in.
+const APPLY2_FIELDS = ["experience", "motivation", "investment", "reason", "ready", "instagram"];
+if (PAGE === "apply2") {
+  const form = $("#apply-form"), cal = $("#booker-cal"), frameBox = $("#cal-frame");
+  const knowThem = !!(lead.name && lead.email && lead.phone);
+  let phone = null, optinSent = knowThem, sent = "", timer = null, wasOpen = false;
+  if (knowThem) $("#contact-fields").remove();
+  else {
+    form.cc.innerHTML = COUNTRY_OPTIONS;
+    phone = phoneField(form.cc, form.phone);
+    if (lead.name) form.elements.name.value = lead.name;
+    if (lead.email) form.elements.email.value = lead.email;
+    form.elements.name.addEventListener("blur", () => { form.elements.name.value = tidyName(form.elements.name.value); });
+  }
+  const answers = () => Object.fromEntries(APPLY2_FIELDS.map(k => [k, (form.elements[k].value || "").trim()]));
+  // Name, email and phone, once all three are valid (→ the opt-in), or null.
+  const contact = () => {
+    if (knowThem) return null;
+    const name = tidyName(form.elements.name.value), email = form.elements.email.value.trim(), p = phone.check(false);
+    return name && emailOk(email) && p && p.ok ? { name, email, phone: p.e164, country: p.country, phoneNational: form.elements.phone.value.trim() } : null;
+  };
+  const update = () => {
+    const c = contact();
+    if (c && !optinSent) {
+      optinSent = true;
+      lead = { ...c };
+      store.set("lead", lead);
+      sendLead({ name: c.name, email: c.email, phone: c.phone, country: c.country }, "optin");
+      initCalendar();
+    }
+    const a = answers(), done = Object.values(a).every(Boolean) && (knowThem || !!c);
+    const out = done && CONFIG.disqualify.includes(a.investment), open = done && !out;
+    cal.classList.toggle("is-locked", !open);
+    frameBox.inert = !open;
+    $("#cal-lock").hidden = open;
+    $("#st-form").classList.toggle("on", !open);
+    $("#st-book").classList.toggle("on", open);
+    // Phones: the calendar is under the form, so bring it into view when it opens.
+    if (open && !wasOpen && matchMedia("(max-width: 860px)").matches) cal.scrollIntoView({ behavior: "smooth", block: "start" });
+    wasOpen = open;
+    // Saved once the form is complete (and again if they change it), a moment later so typing doesn't send a row per key.
+    clearTimeout(timer);
+    if (!done) return;
+    timer = setTimeout(() => {
+      const data = { name: lead.name || "", email: lead.email, ...a, stage: out ? "not_qualified" : "applied" }, key = JSON.stringify(data);
+      if (key !== sent) { sent = key; sendLead(data, "application"); }
+      if (out) { $("#booker-body").hidden = true; $(".booker__steps").hidden = true; $("#nq").hidden = false; }
+    }, 1500);
+  };
+  form.addEventListener("input", update);
+  form.addEventListener("change", update);
+  form.addEventListener("submit", e => e.preventDefault());
+  if (knowThem) initCalendar();   // loads behind the blur right away, so it's ready the moment the form is done
+  update();
+}
+
 /* ---------- GoHighLevel calendar ---------- */
 function initCalendar() {
   const frame = $("#cal-frame");
@@ -489,7 +568,7 @@ function initCalendar() {
 // GoHighLevel tells the page when the call is booked (["msgsndr-booking-complete", …]); then on to /booked.
 let bookingSent = false;
 addEventListener("message", e => {
-  if (PAGE !== "apply" || bookingSent || !CONFIG.ghlCalendarUrl) return;
+  if ((PAGE !== "apply" && PAGE !== "apply2") || bookingSent || !CONFIG.ghlCalendarUrl) return;
   let fromGhl = false;
   try { fromGhl = /(^|\.)(leadconnectorhq\.com|msgsndr\.com)$/.test(new URL(e.origin).hostname) || e.origin === new URL(CONFIG.ghlCalendarUrl).origin; } catch {}
   const text = typeof e.data === "string" ? e.data : Array.isArray(e.data) ? String(e.data[0]) : "";

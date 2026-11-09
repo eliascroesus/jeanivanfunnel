@@ -14,8 +14,7 @@
       "permanent": true
     },
     { "source": "/", "destination": "/waitlist", "permanent": false },
-    { "source": "/redesign/(.*)", "destination": "/$1", "permanent": false },
-    { "source": "/apply-2", "destination": "/apply", "permanent": false }
+    { "source": "/redesign/(.*)", "destination": "/$1", "permanent": false }
   ],
   "rewrites": [
     { "source": "/waitlist", "destination": "/old/index.html" },

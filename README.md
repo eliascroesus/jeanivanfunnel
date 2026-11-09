@@ -7,15 +7,21 @@ Trading funnel for jeanfxtrading.com. There are two sets of pages:
 
 1. **Opt-in** (`/discord`): the headline, a white "Join The FREE Discord" form with the reasons to join, then the
    results and Jean's story. It's kept calm (plain black, little glow) so the form stands out.
-2. **Apply** (`/apply`): the VSL (autoplays muted behind a "Click To Unmute" box), then the application one question
-   at a time right under it, then Jean's GoHighLevel calendar. Investment answers in `CONFIG.disqualify` get the free
-   Discord instead of the calendar. Visitors who didn't opt in first are asked for name, email and phone before the
-   questions (that counts as their opt-in). People who just joined get a short gold confetti burst here.
+2. **Page 2, A/B tested.** Each new opt-in is sent to one of two versions at random (50/50, set by `abSplitApply`
+   in `CONFIG`) and keeps that version if they come back. Add `?v=1` or `?v=2` to a link to see a specific one.
+   Both start with the VSL (autoplays muted behind a "Click To Unmute" box), and people who just joined get a short
+   gold confetti burst:
+   - **`/apply`**: the application one question at a time under the video, then Jean's GoHighLevel calendar.
+   - **`/apply-2`** (iClose style): a short form beside the calendar, which stays blurred and locked until every
+     answer is in (the old `/apply` questions, Instagram last). On phones the calendar sits under the form.
+
+   Investment answers in `CONFIG.disqualify` get the free Discord instead of the calendar. Visitors who didn't opt
+   in first give name, email and phone too (that counts as their opt-in).
 3. **Booked** (`/booked`): "Your call is NOT confirmed yet", Step #1 the thank-you video, Step #2 the Confirm In
    Gmail / Outlook buttons and the FAQ videos (one per row), then the results and Jean's story.
 
 "Meet Jean Ivan" tells his story with his own photos in `assets/jean-ivan/story/`. Their rows in the sheet show
-**Redesign** in the Version column.
+**Redesign** (`/apply`) or **Redesign 2** (`/apply-2`) in the Version column.
 
 **The old funnel** (green), kept in one file, `old/index.html`; the URL picks the page:
 
@@ -27,7 +33,7 @@ Trading funnel for jeanfxtrading.com. There are two sets of pages:
 
 `vercel.json` serves `old/index.html` at `/waitlist`, `/not-qualified` and every `/old/…` page, sends `/` to
 `/waitlist` (delete that redirect, or change its destination, to send it elsewhere), and forwards the old
-`/redesign/…` links and `/apply-2` to the main pages.
+`/redesign/…` links to the main pages.
 
 Results images: testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that folder's
 README). The pages use compressed copies in `assets/jean-ivan/proof/` (a small `NAME.webp` and a `NAME-full.webp`
@@ -55,12 +61,12 @@ then filled into that person's row, matched by email:
 | --- | --- |
 | Opt-in (`/discord`, `/old/discord`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
 | `/apply`, `/old/apply-2` and `/waitlist` | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
-| `/old/apply` (V1) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
+| `/apply-2` and `/old/apply` (V1) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
 | Booking a call | Call Booked At |
 | GoHighLevel | Sent To GHL (when the row was sent; empty = not sent yet) |
 
-The "Version" column says which pages each lead went through: **Redesign** (the main funnel), **V1** / **V2** (the
-old `/old/apply` / `/old/apply-2`) or **Waitlist**. Setup steps are at the top of `lead-capture.gs`. The Web app URL
+The "Version" column says which pages each lead went through: **Redesign** / **Redesign 2** (the main `/apply` /
+`/apply-2`), **V1** / **V2** (the old `/old/apply` / `/old/apply-2`) or **Waitlist**. Setup steps are at the top of `lead-capture.gs`. The Web app URL
 is `leadSheetUrl` in `CONFIG` in both `assets/site/funnel.js` and `old/index.html`.
 
 ## Leads to GoHighLevel
@@ -83,7 +89,7 @@ script editor, or use the sheet's **GoHighLevel → Check the connection**, to s
 | Opt-in on `/discord` | Discord / first stage | `jean-optin` |
 | Gave name, email and phone on `/waitlist` | Discord / first stage | `jean-waitlist-started` |
 | Finished the waiting list | Discord / Waitlist, plus a note with every answer | `jean-waitlist` |
-| Finished an application (`/apply`, or the old `/old/apply` / `/old/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
+| Finished an application (`/apply`, `/apply-2`, or the old `/old/apply` / `/old/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
 | "Don't qualify" investment answer | Discord / Not Qualified, plus a note with every answer | `jean-not-qualified` |
 | Booked a call | 1:1 Mentorship / first stage | `jean-booked` |
 
@@ -107,7 +113,7 @@ A send that fails leaves Sent To GHL empty, so the push picks it up later.
 
 ### Booking calendar
 
-`/apply` shows Jean's GoHighLevel calendar, set in `ghlCalendarUrl` in `CONFIG` (Calendars → the calendar's ⋮ →
+`/apply` and `/apply-2` show Jean's GoHighLevel calendar, set in `ghlCalendarUrl` in `CONFIG` (Calendars → the calendar's ⋮ →
 Share → Permanent link); the old pages use the same calendar (with Calendly as their fallback if it's emptied). The
 page fills in the calendar's name, email and phone, and moves to `/booked` when GoHighLevel reports the booking.
 The `/discord` phone box checks
@@ -126,7 +132,7 @@ Appointment" → **Webhook** (POST) to `<Web app URL>?source=ghl-booked&key=<WEB
 
 The main pages' settings are in `CONFIG` at the top of `assets/site/funnel.js`: videos (`CONFIG.videos` and the FAQ
 list `faqVideos`), the calendar link, the Discord invite, the investment answers that don't qualify, and the
-application questions (`QUESTIONS`). The copy is in each page's `index.html`; the design is in `assets/site/style.css`
+application questions (`QUESTIONS` for `/apply`; the `/apply-2` questions are in `apply-2/index.html`). The copy is in each page's `index.html`; the design is in `assets/site/style.css`
 (the gold is set by the `--accent` colours at the top). The old pages keep their own `CONFIG` block near the end of
 `old/index.html`.
 
@@ -134,4 +140,4 @@ Vimeo videos play the same way as in the Ricky funnel: Vimeo's title, picture, n
 captions are switched off and the page draws its own play, progress, sound and full-screen controls (Vimeo's
 player library is in `assets/vimeo-player.min.js`). The VSL and the thank-you video autoplay muted behind a box
 that restarts them with sound when clicked. `/discord` loads the VSL and the calendar off-screen once someone
-starts the form, so `/apply` opens fast.
+starts the form, so page 2 opens fast.
