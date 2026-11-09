@@ -20,4 +20,5 @@ Only use real testimonials you have the person's OK to share. Blur out account n
 anything else private before uploading.
 
 New uploads don't appear on the pages by themselves: each one is compressed into `assets/jean-ivan/proof/`
-and added to the `PROOF` list in `index.html`. Keep the originals here.
+and added to the `PROOF` list in `assets/site/funnel.js` (main pages) and `old/index.html` (old pages).
+Keep the originals here.

@@ -1,13 +1,13 @@
-/* Jean Ivan funnel, redesign trial. Shared by /redesign/discord, /redesign/apply and /redesign/booked
-   (each page says which one it is in <body data-page="…">). Everything for the trial is in this folder,
-   so deleting the folder removes it. Leads go to the same sheet and GoHighLevel as the main funnel,
-   with "Redesign" in the sheet's Version column so the two can be compared.
+/* Jean Ivan funnel: shared by /discord, /apply and /booked (each page says which one it is in
+   <body data-page="…">). Leads go to the Google Sheet and from there to GoHighLevel, with "Redesign" in the
+   sheet's Version column so they can be told apart from the older pages' leads (V1, V2, Waitlist).
+   The older pages are kept at /old/… (old/index.html).
    Needs /assets/lead-form.js (phone rules, tidyName, emailOk) and /assets/vimeo-player.min.js first. */
 
 const CONFIG = {
   leadSheetUrl: "https://script.google.com/macros/s/AKfycbz5Kit_1dN9WRHCtjC8Idq49u2c5Rr9KMBf1MVEqUjxsxbIX2DWplN-WWwAhCSNyPob/exec",
   version: "Redesign",
-  pages: { discord: "/redesign/discord", apply: "/redesign/apply", booked: "/redesign/booked" },
+  pages: { discord: "/discord", apply: "/apply", booked: "/booked" },
   videos: {
     vsl: "https://player.vimeo.com/video/1242132867",
     nextSteps: "https://player.vimeo.com/video/1243210921",
@@ -28,8 +28,8 @@ const CONFIG = {
   confirmSubject: "Strategy Call",
 };
 
-// The application on /redesign/apply, one question at a time (same questions as /apply-2).
-// Visitors who didn't come through /redesign/discord are asked for name, email and phone first.
+// The application on /apply, one question at a time (same questions as the old /apply-2).
+// Visitors who didn't come through /discord are asked for name, email and phone first.
 const CONTACT_QUESTIONS = [
   { key: "name", type: "text", title: "First, what's your full name?", placeholder: "Full name", autocomplete: "name" },
   { key: "email", type: "email", title: "What's your email?", placeholder: "name@example.com", autocomplete: "email" },
@@ -122,7 +122,7 @@ const tracking = (() => {
   return now;
 })();
 
-// Moves to another page of the trial, keeping ?utm_… and other link options.
+// Moves to another page, keeping ?utm_… and other link options.
 function go(page) {
   location.href = CONFIG.pages[page] + location.search;
 }
@@ -304,7 +304,7 @@ const COUNTRY_OPTIONS = [["US", "+1", "🇺🇸"], ["CA", "+1", "🇨🇦"], ["G
   .map(([c, code, flag]) => `<option value="${code}" data-country="${c}">${flag} ${code}</option>`).join("");
 
 /* ======================================================================= */
-/* /redesign/discord: the opt-in                                            */
+/* /discord: the opt-in                                            */
 /* ======================================================================= */
 if (PAGE === "discord") {
   const form = $("#optin-form"), err = $("#optin-error");
@@ -348,7 +348,7 @@ if (PAGE === "discord") {
 }
 
 /* ======================================================================= */
-/* /redesign/apply: VSL, then the application, then the calendar            */
+/* /apply: VSL, then the application, then the calendar            */
 /* ======================================================================= */
 if (PAGE === "apply") {
   // They just joined: a short burst of gold confetti, once.
@@ -501,7 +501,7 @@ addEventListener("message", e => {
 });
 
 /* ======================================================================= */
-/* /redesign/booked                                                          */
+/* /booked                                                          */
 /* ======================================================================= */
 if (PAGE === "booked") {
   mountVideo($("#next-steps"), CONFIG.videos.nextSteps, { autoplay: true, title: "Next steps" });

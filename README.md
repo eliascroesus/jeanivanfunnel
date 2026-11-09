@@ -1,30 +1,38 @@
 # Jean Ivan funnel
 
-Trading funnel. All pages live in one file, `index.html`; the URL picks the page:
+Trading funnel for jeanfxtrading.com. There are two sets of pages:
 
-1. **Opt-in** (`/discord`): headline, Discord sign-up form and Jean Ivan's results. For now the bare domain (`/`)
-   redirects to `/waitlist` (the `redirects` entry in `vercel.json`; delete it, or change its destination, to undo).
-2. **Application**, A/B tested. Each new opt-in is sent to one of two versions at random (50/50, set by
-   `abSplitV1` in `CONFIG`) and keeps that version if they come back:
-   - **V1** (`/apply`): main video, a short form beside Calendly.
-   - **V2** (`/apply-2`): main video, then one question at a time (Typeform style; the questions are in
-     `APPLY2_QUESTIONS`). Calendly loads in the background and appears after the last answer.
-   - Add `?v=1` or `?v=2` to a link to see a specific version.
-3. **Booked** (`/booked`): next-steps video, FAQ videos and more results.
-4. **Not qualified** (`/not-qualified`): where applicants land instead of the calendar when their investment
-   answer is in `CONFIG.disqualify` ("Under $500" on V1, "don't have the resources" on V2). Their answers still
-   go to the sheet. Put the Discord invite in `CONFIG.discordUrl` to show a "Join The Free Discord" button.
-5. **Waiting list** (`/waitlist`): the `/apply-2` questions without the video or calendar, ending on "You're on the
-   waiting list". Asks for name, email and phone first unless page 1 already has them. The phone question has a
-   searchable country picker (US by default) and checks the number against that country's rules with
-   libphonenumber-js, loaded from jsDelivr only on that question; the sheet gets it as +12015550123. Its rows show
-   **Waitlist** in the sheet's Version column; "don't qualify" answers go to `/not-qualified` as on `/apply-2`.
+**The main funnel** (black and gold). Each page is the `index.html` in its own folder. They share
+`assets/site/style.css` (the design) and `assets/site/funnel.js` (the behaviour, with its settings in `CONFIG` at the top):
 
-`vercel.json` serves `index.html` at `/discord`, `/apply`, `/apply-2`, `/booked`, `/not-qualified` and `/waitlist`. Images and clips go in
-`assets/jean-ivan/`. Testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that
-folder's README). The page uses compressed copies in `assets/jean-ivan/proof/`, listed in `PROOF` in the script:
-Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`), each with a small `NAME.webp`
-for the page and a `NAME-full.webp` that opens when the image is tapped. Page 1, `/booked` and `/waitlist` show all of them.
+1. **Opt-in** (`/discord`): the headline, a white "Join The FREE Discord" form with the reasons to join, then the
+   results and Jean's story. It's kept calm (plain black, little glow) so the form stands out.
+2. **Apply** (`/apply`): the VSL (autoplays muted behind a "Click To Unmute" box), then the application one question
+   at a time right under it, then Jean's GoHighLevel calendar. Investment answers in `CONFIG.disqualify` get the free
+   Discord instead of the calendar. Visitors who didn't opt in first are asked for name, email and phone before the
+   questions (that counts as their opt-in). People who just joined get a short gold confetti burst here.
+3. **Booked** (`/booked`): "Your call is NOT confirmed yet", Step #1 the thank-you video, Step #2 the Confirm In
+   Gmail / Outlook buttons and the FAQ videos (one per row), then the results and Jean's story.
+
+"Meet Jean Ivan" tells his story with his own photos in `assets/jean-ivan/story/`. Their rows in the sheet show
+**Redesign** in the Version column.
+
+**The old funnel** (green), kept in one file, `old/index.html`; the URL picks the page:
+
+- `/old/discord` → `/old/apply` (V1) or `/old/apply-2` (V2, 50/50 by `abSplitV1`; add `?v=1` or `?v=2` to pick) →
+  `/old/booked`, plus `/old/not-qualified` and `/old/waitlist`.
+- The **waiting list** is still live at `/waitlist` (and the bare domain `/` redirects there), with "don't qualify"
+  answers going to `/not-qualified`. Its rows show **Waitlist** in the Version column. The phone question has a
+  searchable country picker and checks numbers with libphonenumber-js, loaded from jsDelivr only on that question.
+
+`vercel.json` serves `old/index.html` at `/waitlist`, `/not-qualified` and every `/old/…` page, sends `/` to
+`/waitlist` (delete that redirect, or change its destination, to send it elsewhere), and forwards the old
+`/redesign/…` links and `/apply-2` to the main pages.
+
+Results images: testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that folder's
+README). The pages use compressed copies in `assets/jean-ivan/proof/` (a small `NAME.webp` and a `NAME-full.webp`
+that opens when the image is tapped), listed in `PROOF` in `assets/site/funnel.js` and in `old/index.html`:
+Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`).
 
 ## Hosting
 
@@ -34,26 +42,26 @@ It's a static site with no build step. On Vercel, import this repo with the defa
 The live domain is **jeanfxtrading.com** (DNS at Network Solutions). `vercel.json` sends the old
 `jeanfx.vercel.app` and `jeanivanfunnel.vercel.app` addresses there with a permanent redirect, keeping the path
 and any `?utm_…` parameters. Preview deployments keep their own `.vercel.app` addresses. The link-preview tags
-(`og:url`, `og:image`) near the top of `index.html` use the same domain.
+(`og:image` and friends) at the top of each page use the same domain.
 
 ## Leads to Google Sheets
 
-Every opt-in on page 1 is added as a row to the
+Every opt-in is added as a row to the
 [Jean Ivan - Master Lead Sheet](https://docs.google.com/spreadsheets/d/19tpKDOSIJwPxz2UbPem6_LPhI1pRYJiX_NuJLXrGQ4k/edit)
-through the Apps Script in `google-sheets/lead-capture.gs`. The page 2 answers and the Calendly booking
-time are then filled into that person's row, matched by email:
+through the Apps Script in `google-sheets/lead-capture.gs`. The application answers and the booking time are
+then filled into that person's row, matched by email:
 
 | Page | Columns filled |
 | --- | --- |
-| Opt-in (`/discord`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
-| V1 (`/apply`) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
-| V2 (`/apply-2`) and `/waitlist` | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
+| Opt-in (`/discord`, `/old/discord`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
+| `/apply`, `/old/apply-2` and `/waitlist` | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
+| `/old/apply` (V1) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
 | Booking a call | Call Booked At |
 | GoHighLevel | Sent To GHL (when the row was sent; empty = not sent yet) |
 
-The "Version" column shows which page 2 (V1 or V2) each lead got, so the two can be compared.
-Setup steps are at the top of `lead-capture.gs`. The Web app URL goes in `leadSheetUrl` in the
-`CONFIG` block near the end of `index.html`; until it's set, the funnel works but sends nothing.
+The "Version" column says which pages each lead went through: **Redesign** (the main funnel), **V1** / **V2** (the
+old `/old/apply` / `/old/apply-2`) or **Waitlist**. Setup steps are at the top of `lead-capture.gs`. The Web app URL
+is `leadSheetUrl` in `CONFIG` in both `assets/site/funnel.js` and `old/index.html`.
 
 ## Leads to GoHighLevel
 
@@ -75,7 +83,7 @@ script editor, or use the sheet's **GoHighLevel → Check the connection**, to s
 | Opt-in on `/discord` | Discord / first stage | `jean-optin` |
 | Gave name, email and phone on `/waitlist` | Discord / first stage | `jean-waitlist-started` |
 | Finished the waiting list | Discord / Waitlist, plus a note with every answer | `jean-waitlist` |
-| Finished an application (`/apply` or `/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
+| Finished an application (`/apply`, or the old `/old/apply` / `/old/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
 | "Don't qualify" investment answer | Discord / Not Qualified, plus a note with every answer | `jean-not-qualified` |
 | Booked a call | 1:1 Mentorship / first stage | `jean-booked` |
 
@@ -99,9 +107,10 @@ A send that fails leaves Sent To GHL empty, so the push picks it up later.
 
 ### Booking calendar
 
-Page 2 shows Jean's GoHighLevel calendar, set in `ghlCalendarUrl` in `CONFIG` (Calendars → the calendar's ⋮ →
-Share → Permanent link). Empty it to go back to Calendly (`calendlyUrl`). The page fills in the calendar's name,
-email and phone, and moves to `/booked` when GoHighLevel reports the booking. The `/discord` phone box checks
+`/apply` shows Jean's GoHighLevel calendar, set in `ghlCalendarUrl` in `CONFIG` (Calendars → the calendar's ⋮ →
+Share → Permanent link); the old pages use the same calendar (with Calendly as their fallback if it's emptied). The
+page fills in the calendar's name, email and phone, and moves to `/booked` when GoHighLevel reports the booking.
+The `/discord` phone box checks
 numbers against the same rules as the calendar (libphonenumber's, in `assets/lead-form.js`), so the calendar
 never rejects a number the opt-in accepted. On `/booked`, **Confirm In Gmail** opens their inbox searched for the
 confirmation email (`confirmFrom` / `confirmSubject` in `CONFIG`), and **Confirm In Outlook** opens Outlook on the web. Bookings in the GoHighLevel calendar also start its
@@ -115,11 +124,14 @@ Appointment" → **Webhook** (POST) to `<Web app URL>?source=ghl-booked&key=<WEB
 
 ## Editing
 
-Brand name, videos, the calendar links (GoHighLevel or Calendly) and the sheet URL are all in the `CONFIG` block. To swap a video
-placeholder for a real video, paste its embed link into `CONFIG.videos`.
+The main pages' settings are in `CONFIG` at the top of `assets/site/funnel.js`: videos (`CONFIG.videos` and the FAQ
+list `faqVideos`), the calendar link, the Discord invite, the investment answers that don't qualify, and the
+application questions (`QUESTIONS`). The copy is in each page's `index.html`; the design is in `assets/site/style.css`
+(the gold is set by the `--accent` colours at the top). The old pages keep their own `CONFIG` block near the end of
+`old/index.html`.
 
 Vimeo videos play the same way as in the Ricky funnel: Vimeo's title, picture, name, logo, share buttons and
 captions are switched off and the page draws its own play, progress, sound and full-screen controls (Vimeo's
-player library is in `assets/vimeo-player.min.js`). The VSL (and `nextSteps`) autoplay muted behind a
-"Click to listen" box that restarts them with sound; `AUTOPLAY_VIDEOS` lists them. Only the page being shown
-loads its videos, and page 1 loads the VSL off-screen once someone starts the form so /apply opens fast.
+player library is in `assets/vimeo-player.min.js`). The VSL and the thank-you video autoplay muted behind a box
+that restarts them with sound when clicked. `/discord` loads the VSL and the calendar off-screen once someone
+starts the form, so `/apply` opens fast.

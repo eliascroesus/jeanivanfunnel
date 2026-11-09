@@ -31,9 +31,11 @@
   // Pick the page from the URL before anything draws, so /apply never flashes page 1.
   (function () {
     var pages = { "/discord": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
-    var path = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1");
+    // Under /old/… this is the old funnel; at /waitlist and /not-qualified it's still the live waiting list.
+    var base = /^\/old(\/|$)/.test(location.pathname) ? "/old" : "";
+    var path = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1").slice(base.length) || "/";
     // "/" sends people to the waiting list for now (vercel.json does this before the page loads; this is the backup).
-    if (path === "/" && location.protocol !== "file:") location.replace("/waitlist" + location.search);
+    if (path === "/" && !base && location.protocol !== "file:") location.replace("/waitlist" + location.search);
     document.documentElement.setAttribute("data-page", pages[path] || "optin");
   })();
 </script>
@@ -1489,21 +1491,24 @@ function warmUpNextPage(videos = [CONFIG.videos.vsl, CONFIG.ghlCalendarUrl], onF
 $$(".video__play").forEach(btn => btn.addEventListener("click", () => btn.closest(".video").classList.toggle("is-playing")));
 $("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; });
 
-/* ---------- Pages: / → /apply or /apply-2 (A/B) → /booked ---------- */
-// On Vercel, vercel.json serves this same file at every path; the path picks the page.
+/* ---------- Pages: /old/discord → /old/apply or /old/apply-2 (A/B) → /old/booked ---------- */
+// This is the old funnel, kept at /old/… (the new pages are /discord, /apply and /booked). vercel.json serves this
+// same file at each of those paths, and at /waitlist and /not-qualified, which are still live; the path picks the page.
+// BASE keeps every link on the side it started on: /old/… stays in /old/…, /waitlist goes to /not-qualified.
+const BASE = /^\/old(\/|$)/.test(location.pathname) ? "/old" : "";
 const PAGES = { "/discord": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
 const PATHS = { optin: "/discord", apply: "/apply", apply2: "/apply-2", booked: "/booked", notqualified: "/not-qualified", waitlist: "/waitlist" };
 // Old #apply / #booked links → the matching path.
 if (["#apply", "#booked"].includes(location.hash) && location.protocol !== "file:") {
-  location.replace(PATHS[location.hash.slice(1)] + location.search);
+  location.replace(BASE + PATHS[location.hash.slice(1)] + location.search);
 }
-const VIEW = PAGES[location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1")] || "optin";
+const VIEW = PAGES[location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1").slice(BASE.length) || "/"] || "optin";
 // Keeps ?utm_… on every page (but not the ?v= test switch, so a reset only happens once).
 function go(view) {
   const q = new URLSearchParams(location.search);
   if (q.get("v") === "reset") q.delete("v");
   const rest = q.toString();
-  location.assign(PATHS[view] + (rest ? "?" + rest : ""));
+  location.assign(BASE + PATHS[view] + (rest ? "?" + rest : ""));
 }
 
 // A/B version for page 2. Decided once per visitor and remembered.

@@ -18,8 +18,8 @@
  *      This writes the column headers into row 1.
  *   4. Deploy → New deployment → type "Web app".
  *      Execute as: Me. Who has access: Anyone. Click Deploy.
- *   5. Copy the Web app URL (ends in /exec) and paste it into
- *      leadSheetUrl in the CONFIG block of index.html.
+ *   5. Copy the Web app URL (ends in /exec) and paste it into leadSheetUrl in CONFIG in
+ *      assets/site/funnel.js (the main pages) and old/index.html (the old pages and the waiting list).
  *
  * Updating this script later: paste the new code, save, run "setup" once (adds any new
  * column headers), then Deploy → Manage deployments → pencil icon → Version: New version
@@ -476,7 +476,7 @@ function norm_(text) {
  * Safe to run again: rows with a time in "Sent To GHL" are skipped. "Preview" only counts, it sends nothing.
  */
 const GHL_IMPORT_TAG = 'jean-imported';
-// Same as CONFIG.disqualify in index.html: these investment answers are "not qualified".
+// Same as CONFIG.disqualify in assets/site/funnel.js and old/index.html: these investment answers are "not qualified".
 const DISQUALIFY = ['Under $500', "I want to, but don't have the resources to fund my goals"];
 
 function onOpen() {
