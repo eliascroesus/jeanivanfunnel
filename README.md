@@ -50,6 +50,19 @@ The live domain is **jeanfxtrading.com** (DNS at Network Solutions). `vercel.jso
 and any `?utm_…` parameters. Preview deployments keep their own `.vercel.app` addresses. The link-preview tags
 (`og:image` and friends) at the top of each page use the same domain.
 
+### Speed
+
+- **Font:** Inter is served from the site (`assets/site/fonts/`), not Google Fonts, so there's no third-party
+  stylesheet holding up the first paint. It's one small variable file (weights 400 to 900), preloaded by each page.
+- **Video first:** on `/apply` and `/apply-2` the calendar loads after the page and its video (about 2 seconds after the
+  page finishes), or straight away once someone touches the form.
+- **FAQ videos** on `/booked` show Vimeo's still and a play button, and only load when they're tapped. The thank-you
+  video loads straight away.
+- **Caching** (`headers` in `vercel.json`): fonts are cached for a year, and images, the favicon and the Vimeo player
+  library for a week. The pages, `style.css` and the scripts are checked on every visit, so edits show straight away.
+  If you replace an image but keep its file name, returning visitors can see the old one for up to a week. Give the new
+  image a new name to avoid that.
+
 ## Leads to Google Sheets
 
 Every opt-in is added as a row to the

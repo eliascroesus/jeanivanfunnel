@@ -174,19 +174,43 @@ const ICONS = {
   listen: '<svg viewBox="0 0 124 124" fill="currentColor" aria-hidden="true"><path d="M15.9 51.4v20.6c0 2.8 2.3 5.1 5.2 5.1h15.4l16.9 16.9c3.2 3.3 8.8.9 8.8-3.6V33c0-4.6-5.6-6.9-8.8-3.7L36.5 46.3H21.1c-2.9 0-5.2 2.3-5.2 5.1z"/><path d="M77.9 44.7c-2.2-2-5.4-.2-5.4 2.8v1.3c0 1 .4 1.9 1 2.7 2.2 2.9 3.5 6.3 3.5 10 0 3.7-1.3 7.2-3.5 10-.6.8-1 1.8-1 2.8v1.7c0 3 3.1 4.8 5.3 2.8 4.6-4.2 7.6-10.3 7.6-17.1 0-6.8-2.9-12.9-7.5-17z"/><path d="M72.5 22.9v1c0 2 1.3 3.7 3.1 4.4 13.3 5.3 22.7 18.3 22.7 33.4s-9.4 28.1-22.7 33.4c-1.8.8-3.1 2.4-3.1 4.4v1c0 3.3 3.3 5.5 6.3 4.4 17.4-6.6 29.8-23.5 29.8-43.2S96.2 25.2 78.8 18.5c-3-1.2-6.3 1.2-6.3 4.4z"/></svg>',
 };
 const players = [];
-function vimeoEmbedUrl(url, custom, autoplay) {
+function vimeoEmbedUrl(url, custom, autoplay, start) {
   const u = new URL(url);
-  const extra = custom ? { controls: 0, ...(autoplay ? { autoplay: 1, muted: 1 } : {}) } : {};
+  const extra = { ...(custom ? { controls: 0 } : {}), ...(autoplay && custom ? { autoplay: 1, muted: 1 } : start ? { autoplay: 1 } : {}) };
   Object.entries({ ...VIMEO_CLEAN, ...extra }).forEach(([k, v]) => u.searchParams.set(k, v));
   return u;
 }
-// Puts a Vimeo video in a .vslframe box. autoplay = starts muted with "Click to unmute" (the VSL and thank-you video).
-function mountVideo(box, url, { autoplay = false, title = "Video" } = {}) {
+// Puts a Vimeo video in a .vslframe box. autoplay = starts muted with "Click to unmute" (the VSL and thank-you video);
+// start = plays with sound straight away (a video someone just clicked).
+function mountVideo(box, url, { autoplay = false, start = false, title = "Video" } = {}) {
   if (!box || !url || box.classList.contains("has-embed")) return;
   box.classList.add("has-embed");
   const custom = !!window.Vimeo;   // without the player library Vimeo keeps its own controls
-  box.innerHTML = `<iframe src="${esc(vimeoEmbedUrl(url, custom, autoplay).href)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="${esc(title)}"${autoplay ? "" : ' loading="lazy"'}></iframe>`;
+  box.innerHTML = `<iframe src="${esc(vimeoEmbedUrl(url, custom, autoplay, start).href)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="${esc(title)}"${autoplay || start ? "" : ' loading="lazy"'}></iframe>`;
   if (custom) videoControls(box, autoplay);
+}
+// A video that only loads when it's clicked: Vimeo's still and a play button until then, so a page with several
+// videos doesn't start several players at once (the FAQ videos on /booked).
+function videoOnClick(box, url, title) {
+  if (!box || !url) return;
+  box.classList.add("vp", "is-paused", "vp--still");
+  box.innerHTML = `<button class="vp__hit" type="button" aria-label="Play: ${esc(title)}"></button><span class="vp__big" aria-hidden="true">${ICONS.play}</span>`;
+  const id = (url.match(/video\/(\d+)/) || [])[1];
+  const still = () => fetch("https://vimeo.com/api/oembed.json?width=960&url=" + encodeURIComponent("https://vimeo.com/" + id))
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { if (d && d.thumbnail_url && box.classList.contains("vp--still")) box.style.backgroundImage = `url("${d.thumbnail_url.replace(/"/g, "%22")}")`; })
+    .catch(() => {});
+  if (id) {
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); still(); } }, { rootMargin: "300px 0px" });
+      io.observe(box);
+    } else still();
+  }
+  $(".vp__hit", box).addEventListener("click", () => {
+    box.classList.remove("vp", "is-paused", "vp--still");
+    box.style.backgroundImage = "";
+    mountVideo(box, url, { start: true, title });
+  }, { once: true });
 }
 function videoControls(box, autoplay) {
   const player = new Vimeo.Player(box.querySelector("iframe"));
@@ -224,6 +248,7 @@ function videoControls(box, autoplay) {
   };
   player.on("play", () => {
     paused = false; box.classList.remove("is-paused");
+    player.getMuted().then(m => { muted = m; box.classList.toggle("is-muted", m); }).catch(() => {});
     players.forEach(p => { if (p !== player) p.pause().catch(() => {}); });   // one video at a time
   });
   player.on("pause", () => { paused = true; box.classList.add("is-paused"); });
@@ -456,7 +481,7 @@ if (PAGE === "apply") {
   });
   back.addEventListener("click", () => { if (index > 0) show(index - 1); });
   show(0);
-  if (knowThem) initCalendar();   // loads hidden now, so it's ready the moment the last answer is in
+  if (knowThem) calendarSoon(quiz);   // loads hidden in the background, so it's ready the moment the last answer is in
 }
 
 /* ---------- Gold confetti (about 2 seconds, skipped for people who turn motion off) ---------- */
@@ -549,11 +574,21 @@ if (PAGE === "apply2") {
   form.addEventListener("input", update);
   form.addEventListener("change", update);
   form.addEventListener("submit", e => e.preventDefault());
-  if (knowThem) initCalendar();   // loads behind the blur right away, so it's ready the moment the form is done
+  if (knowThem) calendarSoon(form);   // loads behind the blur in the background, so it's ready the moment the form is done
   update();
 }
 
 /* ---------- GoHighLevel calendar ---------- */
+// The calendar is the heaviest thing on the page, so the video goes first: it loads once the page has finished
+// loading (plus a moment), or as soon as they touch the form, whichever comes first. Only ever once.
+function calendarSoon(form) {
+  let started = false;
+  const start = () => { if (!started) { started = true; initCalendar(); } };
+  ["pointerdown", "focusin", "keydown"].forEach(ev => form.addEventListener(ev, start, { once: true, passive: true }));
+  const afterLoad = () => setTimeout(start, 2000);
+  if (document.readyState === "complete") afterLoad(); else addEventListener("load", afterLoad, { once: true });
+  setTimeout(start, 9000);   // even if something on the page is slow to finish loading
+}
 function initCalendar() {
   const frame = $("#cal-frame");
   if (!frame || !CONFIG.ghlCalendarUrl || !lead.email || frame.dataset.for === lead.email) return;
@@ -589,7 +624,7 @@ if (PAGE === "booked") {
     `<article class="vid-card"><h3>${esc(q)}</h3><div class="vslframe" data-faq="${i}"></div></article>`).join("");
   $$("[data-faq]", grid).forEach((box, i) => {
     const [q, url] = CONFIG.faqVideos.filter(([, u]) => u)[i];
-    mountVideo(box, url, { title: q });
+    videoOnClick(box, url, q);
   });
   // "Confirm In Gmail" opens their Gmail searched for the confirmation email (Spam and Promotions too);
   // "Confirm In Outlook" opens Outlook on the web (Outlook.com for personal addresses, Microsoft 365 for work ones).

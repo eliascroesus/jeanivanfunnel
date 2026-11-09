@@ -5,16 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Apply | Jean Ivan</title>
 <meta name="description" content="The real reason you keep losing funded accounts, and how Jean Ivan fixed it. Apply for the 1-1 JFX Elite Mentorship.">
-<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="The SMC Strategy Behind $100K+ In Prop Firm Payouts">
 <meta property="og:description" content="Not signals: a full mentorship. Video course, 1-on-1 mentorship and a private Discord.">
 <meta property="og:image" content="https://jeanfxtrading.com/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="preload" href="/assets/site/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Connect to Vimeo early so the video starts sooner -->
+<link rel="preconnect" href="https://player.vimeo.com">
+<link rel="preconnect" href="https://i.vimeocdn.com">
+<link rel="preconnect" href="https://f.vimeocdn.com">
 <link rel="stylesheet" href="/assets/site/style.css">
 </head>
 <body data-page="apply">
@@ -94,7 +96,7 @@
 
 <footer>
   <div class="wrap">
-    <div class="brand"><img src="/favicon.png" alt="">Jean FX Trading</div>
+    <div class="brand"><img src="/assets/site/jfx-logo.png" width="28" height="28" loading="lazy" alt="">Jean FX Trading</div>
     <p>Trading involves substantial risk of loss and isn't suitable for everyone. Most people who trade lose money. Nothing on
       this page is financial advice. The results shown are individual results, not typical, and not a promise of what you will earn.</p>
   </div>
@@ -103,8 +105,8 @@
 <div class="sticky-cta" id="sticky-cta" data-hide=".book-panel"><a class="btn" href="#book">Apply For The Mentorship <span>→</span></a></div>
 <dialog class="zoom" id="zoom"><img alt=""></dialog>
 
-<script src="/assets/vimeo-player.min.js"></script>
-<script src="/assets/lead-form.js"></script>
-<script src="/assets/site/funnel.js"></script>
+<script defer src="/assets/vimeo-player.min.js"></script>
+<script defer src="/assets/lead-form.js"></script>
+<script defer src="/assets/site/funnel.js"></script>
 </body>
 </html>
