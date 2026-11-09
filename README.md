@@ -27,13 +27,13 @@ Trading funnel for jeanfxtrading.com. There are two sets of pages:
 
 - `/old/discord` → `/old/apply` (V1) or `/old/apply-2` (V2, 50/50 by `abSplitV1`; add `?v=1` or `?v=2` to pick) →
   `/old/booked`, plus `/old/not-qualified` and `/old/waitlist`.
-- The **waiting list** is still live at `/waitlist` (and the bare domain `/` redirects there), with "don't qualify"
-  answers going to `/not-qualified`. Its rows show **Waitlist** in the Version column. The phone question has a
-  searchable country picker and checks numbers with libphonenumber-js, loaded from jsDelivr only on that question.
+- The **waiting list** is switched off: `/waitlist` (and its "don't qualify" page `/not-qualified`) redirect to
+  `/discord`. A copy is kept at `/old/waitlist`. Its rows in the sheet show **Waitlist** in the Version column.
 
-`vercel.json` serves `old/index.html` at `/waitlist`, `/not-qualified` and every `/old/…` page, sends `/` to
-`/waitlist` (delete that redirect, or change its destination, to send it elsewhere), and forwards the old
-`/redesign/…` links to the main pages.
+`vercel.json` sends the bare domain `/`, `/waitlist` and `/not-qualified` to `/discord` (change a redirect's
+destination to send it elsewhere; any `?utm_…` on the link is kept), serves `old/index.html` at every `/old/…` page,
+and forwards the old `/redesign/…` links to the main pages. To bring the waiting list back, delete the `/waitlist`
+and `/not-qualified` redirects and add rewrites for them to `/old/index.html`, like the `/old/…` ones.
 
 Results images: testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that folder's
 README). The pages use compressed copies in `assets/jean-ivan/proof/` (a small `NAME.webp` and a `NAME-full.webp`
@@ -73,7 +73,7 @@ then filled into that person's row, matched by email:
 | Page | Columns filled |
 | --- | --- |
 | Opt-in (`/discord`, `/old/discord`) | Submitted At, Full Name, Email, Phone, Country, Funnel, Page URL, UTM Source/Medium/Campaign/Content/Term, Referrer, Device, Time Zone, Version |
-| `/apply`, `/old/apply-2` and `/waitlist` | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
+| `/apply`, `/old/apply-2` and `/old/waitlist` | Situation, Biggest Goal, Obstacles, Instagram, Investment, Application At |
 | `/apply-2` and `/old/apply` (V1) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
 | Booking a call | Call Booked At |
 | GoHighLevel | Sent To GHL (when the row was sent; empty = not sent yet) |
@@ -100,7 +100,7 @@ script editor, or use the sheet's **GoHighLevel → Check the connection**, to s
 | Funnel step | Pipeline / stage | Tag |
 | --- | --- | --- |
 | Opt-in on `/discord` | Discord / first stage | `jean-optin` |
-| Gave name, email and phone on `/waitlist` | Discord / first stage | `jean-waitlist-started` |
+| Gave name, email and phone on the waiting list (now off; leads already in the sheet) | Discord / first stage | `jean-waitlist-started` |
 | Finished the waiting list | Discord / Waitlist, plus a note with every answer | `jean-waitlist` |
 | Finished an application (`/apply`, `/apply-2`, or the old `/old/apply` / `/old/apply-2`) | Discord / Applied, plus a note with every answer | `jean-applied` |
 | "Don't qualify" investment answer | Discord / Not Qualified, plus a note with every answer | `jean-not-qualified` |

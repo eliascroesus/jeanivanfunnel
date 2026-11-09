@@ -31,11 +31,11 @@
   // Pick the page from the URL before anything draws, so /apply never flashes page 1.
   (function () {
     var pages = { "/discord": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
-    // Under /old/… this is the old funnel; at /waitlist and /not-qualified it's still the live waiting list.
+    // This is the old funnel, served under /old/… (the waiting list is saved at /old/waitlist).
     var base = /^\/old(\/|$)/.test(location.pathname) ? "/old" : "";
     var path = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/(.)\/+$/, "$1").slice(base.length) || "/";
-    // "/" sends people to the waiting list for now (vercel.json does this before the page loads; this is the backup).
-    if (path === "/" && !base && location.protocol !== "file:") location.replace("/waitlist" + location.search);
+    // "/" goes to the opt-in, /discord (vercel.json does this before the page loads; this is the backup).
+    if (path === "/" && !base && location.protocol !== "file:") location.replace("/discord" + location.search);
     document.documentElement.setAttribute("data-page", pages[path] || "optin");
   })();
 </script>
@@ -958,7 +958,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 </main>
 
 <!-- =====================================================================
-     WAITING LIST  (/waitlist)
+     WAITING LIST  (/old/waitlist; /waitlist itself now redirects to /discord)
      Same one-question-at-a-time card as /apply-2 (moved here by the script), without the video or calendar.
      Asks for name, email and phone first unless page 1 already has them. Rows show "Waitlist" in Version.
      ===================================================================== -->
@@ -1493,8 +1493,9 @@ $("#unmute")?.addEventListener("click", e => { e.currentTarget.hidden = true; })
 
 /* ---------- Pages: /old/discord → /old/apply or /old/apply-2 (A/B) → /old/booked ---------- */
 // This is the old funnel, kept at /old/… (the new pages are /discord, /apply and /booked). vercel.json serves this
-// same file at each of those paths, and at /waitlist and /not-qualified, which are still live; the path picks the page.
-// BASE keeps every link on the side it started on: /old/… stays in /old/…, /waitlist goes to /not-qualified.
+// same file at each of those paths, including the saved waiting list (/old/waitlist → /old/not-qualified); the path
+// picks the page. /waitlist and /not-qualified now redirect to /discord.
+// BASE keeps every link on the side it started on: /old/… stays in /old/….
 const BASE = /^\/old(\/|$)/.test(location.pathname) ? "/old" : "";
 const PAGES = { "/discord": "optin", "/apply": "apply", "/apply-2": "apply2", "/booked": "booked", "/not-qualified": "notqualified", "/waitlist": "waitlist" };
 const PATHS = { optin: "/discord", apply: "/apply", apply2: "/apply-2", booked: "/booked", notqualified: "/not-qualified", waitlist: "/waitlist" };

@@ -13,7 +13,9 @@
       "destination": "https://jeanfxtrading.com/$1",
       "permanent": true
     },
-    { "source": "/", "destination": "/waitlist", "permanent": false },
+    { "source": "/", "destination": "/discord", "permanent": false },
+    { "source": "/waitlist", "destination": "/discord", "permanent": false },
+    { "source": "/not-qualified", "destination": "/discord", "permanent": false },
     { "source": "/redesign/(.*)", "destination": "/$1", "permanent": false }
   ],
   "headers": [
@@ -31,8 +33,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/waitlist", "destination": "/old/index.html" },
-    { "source": "/not-qualified", "destination": "/old/index.html" },
     { "source": "/old/discord", "destination": "/old/index.html" },
     { "source": "/old/apply", "destination": "/old/index.html" },
     { "source": "/old/apply-2", "destination": "/old/index.html" },
