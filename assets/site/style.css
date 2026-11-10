@@ -46,7 +46,7 @@ h1, h2, h3 { text-wrap: balance; }
 h1, h2 { text-shadow: 0 2px 18px rgba(0, 0, 0, .75); }
 /* Gold text glows */
 .accent { color: var(--accent-bright); text-shadow: 0 0 8px rgba(var(--accent-rgb), .2), 0 2px 18px rgba(0, 0, 0, .6); }
-.kicker, .step-mini, .step-ribbon, .story-card .when, .story-stat b, .step-h b { text-shadow: 0 0 8px rgba(var(--accent-rgb), .18); }
+.kicker, .step-mini, .step-ribbon, .story-card .when, .step-h b { text-shadow: 0 0 8px rgba(var(--accent-rgb), .18); }
 
 }
 h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; letter-spacing: -1px; }
@@ -321,21 +321,19 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
   .booker__steps span { font-size: 13px; padding: 13px 6px; gap: 7px; }
 }
 
-/* ---------- Meet Jean Ivan: his story ---------- */
-.story { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 40px; text-align: left; }
+/* ---------- Meet Jean Ivan: two photos of him, then his story ---------- */
+.coach-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 920px; margin: 36px auto 0; }
+.coach-photos img {
+  width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 18px;
+  border: 1px solid rgba(var(--accent-rgb), .4); box-shadow: 0 30px 70px -34px rgba(0, 0, 0, .9);
+}
+.story { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 22px; text-align: left; }
 .story-card {
   display: flex; flex-direction: column; overflow: hidden; border-radius: 16px;
   background: rgba(20, 20, 20, .95); border: 1px solid rgba(var(--accent-rgb), .45);
   box-shadow: 0 24px 60px -34px rgba(0, 0, 0, .8);
 }
-.story-card img, .story-stat { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
-.story-stat {
-  display: grid; place-content: center; gap: 6px; text-align: center;
-  background: radial-gradient(circle at 50% 42%, rgba(var(--accent-rgb), .1), transparent 68%), #0b0b0b;
-}
-.story-stat b { font-size: clamp(46px, 5vw, 62px); font-weight: 900; line-height: 1; color: var(--accent-bright); }
-.story-stat span { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-.story-card .txt { padding: 16px 18px 20px; }
+.story-card .txt { padding: 18px 18px 20px; }
 .story-card .when { font-size: 11.5px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 6px; }
 .story-card p { font-size: 14.5px; color: var(--muted); line-height: 1.6; }
 .story-card p b { color: #fff; }
@@ -343,8 +341,9 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
 .story-quote cite { display: block; margin-top: 12px; font-size: 13px; font-style: normal; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-bright); }
 @media (max-width: 1000px) { .story { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) {
-  .story { grid-template-columns: 1fr; gap: 14px; }
-  .story-card img, .story-stat { aspect-ratio: 16 / 11; object-position: 50% 30%; }
+  .coach-photos { gap: 10px; margin-top: 26px; }
+  .coach-photos img { border-radius: 14px; }
+  .story { grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
 }
 
 /* ---------- /booked ---------- */
@@ -399,9 +398,9 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
    come after they join, on /apply. */
 body[data-page="discord"] .hero { background: none; }
 body[data-page="discord"] .accent { text-shadow: none; }
-body[data-page="discord"] .kicker, body[data-page="discord"] .story-card .when, body[data-page="discord"] .story-stat b { text-shadow: none; }
+body[data-page="discord"] .kicker, body[data-page="discord"] .story-card .when { text-shadow: none; }
 body[data-page="discord"] .hl { box-shadow: none; }
-body[data-page="discord"] .story-card { box-shadow: none; border-color: rgba(255, 255, 255, .1); }
+body[data-page="discord"] .story-card, body[data-page="discord"] .coach-photos img { box-shadow: none; border-color: rgba(255, 255, 255, .1); }
 
 /* ---------- Gold confetti on /apply right after joining ---------- */
 .confetti { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
