@@ -1,5 +1,5 @@
-/* "Add it to your calendar" on /booked (and /old/booked), plus reading the call time from GoHighLevel's calendar.
-   Plain script, used by assets/site/funnel.js and old/index.html through window.callCalendar:
+/* "Add it to your calendar" on /booked, plus reading the call time from GoHighLevel's calendar.
+   Plain script, used by assets/site/funnel.js through window.callCalendar:
      callCalendar.fromMessage(data) → { start, end } (ISO times) when the calendar's "booking complete" message
                                       includes the call time, else null. GoHighLevel doesn't document what that
                                       message holds, so this looks for a start time anywhere in it.

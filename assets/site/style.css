@@ -1,4 +1,4 @@
-/* Jean Ivan funnel: shared styles for /discord, /apply and /booked (the older pages live in /old/index.html).
+/* Jean Ivan funnel: shared styles for /discord, /apply, /apply-2 and /booked.
    Black and gold, Inter, one blue call-to-action colour. To try Jean's green instead, change --accent,
    --accent-bright, --accent-edge and --accent-rgb below (e.g. #4ade80, #86efac, #166534, 74, 222, 128). */
 /* Inter (SIL Open Font License, see fonts/LICENSE-Inter.txt), served from the site: one variable file covers weights
@@ -321,17 +321,6 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
   .booker__steps span { font-size: 13px; padding: 13px 6px; gap: 7px; }
 }
 
-/* ---------- Results wall ---------- */
-.wall { margin-top: 34px; columns: 3; column-gap: 12px; text-align: left; }
-.tshot {
-  display: block; width: 100%; margin-bottom: 12px; padding: 0; border: 1px solid rgba(var(--accent-rgb), .35); border-radius: 12px;
-  overflow: hidden; break-inside: avoid; cursor: zoom-in; background: var(--panel);
-}
-.tshot img { width: 100%; height: auto; }
-.wall-rnt { text-align: center; margin: 16px auto 0; font-size: .75rem; color: var(--faint); max-width: 560px; }
-@media (max-width: 900px) { .wall { columns: 2; } }
-@media (max-width: 560px) { .wall { columns: 1; } }
-
 /* ---------- Meet Jean Ivan: his story ---------- */
 .story { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 40px; text-align: left; }
 .story-card {
@@ -412,8 +401,7 @@ body[data-page="discord"] .hero { background: none; }
 body[data-page="discord"] .accent { text-shadow: none; }
 body[data-page="discord"] .kicker, body[data-page="discord"] .story-card .when, body[data-page="discord"] .story-stat b { text-shadow: none; }
 body[data-page="discord"] .hl { box-shadow: none; }
-body[data-page="discord"] .tshot, body[data-page="discord"] .story-card { box-shadow: none; border-color: rgba(255, 255, 255, .1); }
-.results-under-form { padding-top: 6px; }
+body[data-page="discord"] .story-card { box-shadow: none; border-color: rgba(255, 255, 255, .1); }
 
 /* ---------- Gold confetti on /apply right after joining ---------- */
 .confetti { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
@@ -431,7 +419,3 @@ footer .foot-nav a { text-decoration: none; }
 footer .foot-nav a:hover { color: #fff; text-decoration: underline; }
 .has-sticky footer { padding-bottom: 110px; }
 
-/* ---------- Enlarged results image ---------- */
-.zoom { margin: auto; padding: 0; border: 0; background: none; max-width: min(96vw, 1100px); max-height: 94vh; }
-.zoom::backdrop { background: rgba(0, 0, 0, .86); }
-.zoom img { max-width: 100%; max-height: 94vh; width: auto; height: auto; border-radius: 10px; cursor: zoom-out; }

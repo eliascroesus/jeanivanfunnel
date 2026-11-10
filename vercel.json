@@ -16,6 +16,8 @@
     { "source": "/", "destination": "/discord", "permanent": false },
     { "source": "/waitlist", "destination": "/discord", "permanent": false },
     { "source": "/not-qualified", "destination": "/discord", "permanent": false },
+    { "source": "/old", "destination": "/discord", "permanent": false },
+    { "source": "/old/(.*)", "destination": "/discord", "permanent": false },
     { "source": "/redesign/(.*)", "destination": "/$1", "permanent": false }
   ],
   "headers": [
@@ -28,7 +30,7 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
     },
     {
-      "source": "/(assets/vimeo-player.min.js|assets/site/jfx-logo.png|favicon.ico|favicon.png|apple-touch-icon.png|og-jfx-discord.jpg)",
+      "source": "/(assets/vimeo-player.min.js|assets/site/jfx-logo.png|favicon.ico|apple-touch-icon.png|og-jfx-discord.jpg)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
     },
     {
@@ -37,12 +39,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/old/discord", "destination": "/old/index.html" },
-    { "source": "/old/apply", "destination": "/old/index.html" },
-    { "source": "/old/apply-2", "destination": "/old/index.html" },
-    { "source": "/old/booked", "destination": "/old/index.html" },
-    { "source": "/old/not-qualified", "destination": "/old/index.html" },
-    { "source": "/old/waitlist", "destination": "/old/index.html" },
     { "source": "/go/:slug", "destination": "/api/go?slug=:slug" }
   ]
 }
