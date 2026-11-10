@@ -44,10 +44,26 @@ destination to send it elsewhere; any `?utm_…` on the link is kept), serves `o
 and forwards the old `/redesign/…` links to the main pages. To bring the waiting list back, delete the `/waitlist`
 and `/not-qualified` redirects and add rewrites for them to `/old/index.html`, like the `/old/…` ones.
 
-Results images: testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that folder's
-README). The pages use compressed copies in `assets/jean-ivan/proof/` (a small `NAME.webp` and a `NAME-full.webp`
-that opens when the image is tapped), listed in `PROOF` in `assets/site/funnel.js` and in `old/index.html`:
-Jean Ivan's own results (`jean-NN`) mixed with community wins (`community-NN`).
+### Kept safe for Instagram (Meta)
+
+A test Instagram account that linked to the funnel got "You can't share links" for "prohibited commercial
+practices" (Meta's rule against scams that promise money). So everything an Instagram visitor sees is kept free of
+earnings claims:
+
+- **Link preview:** `og-jfx-discord.jpg` and the title "Join The Free JFX Trading Discord", with no dollar amounts
+  or payout certificates (the old `og-image.jpg` was removed).
+- **`/discord`:** headline "The Free Discord Where 614 Traders Learn My SMC Strategy", with no money or time promise.
+  Under the button: "Your invite comes by email + text" with the Privacy Policy and Terms links.
+- **No payout walls** on `/discord`, `/apply`, `/apply-2` or `/booked`. `/apply` and `/apply-2` say "Step #1: Watch
+  How I Fixed It" (no "$100k+ in payouts"). Jean's story no longer mentions a $10K month or $100K+ in payouts.
+- **Never** show Meta a different page from what visitors see (cloaking). Instagram's in-app browser is Meta's own
+  browser, so it sees every page after the tap anyway, and cloaking gets domains blocked across Meta and accounts
+  disabled. Keep the VSL and any new copy free of promised amounts too.
+
+Results images are still in the repo, in case you want them somewhere Instagram traffic doesn't go. The
+testimonials are uploaded to `assets/jean-ivan/testimonials/` (upload steps are in that folder's README). The
+compressed copies used by the pages are in `assets/jean-ivan/proof/` and listed in `PROOF` in
+`assets/site/funnel.js`. A `<div class="wall" data-proof></div>` on a page shows them all.
 
 ## Hosting
 
@@ -210,14 +226,19 @@ reels, YouTube, TikTok…). Each looks like `https://jeanfxtrading.com/go/ig-bio
 person straight on to `/discord` (or `/apply`, `/apply-2`, or any other link you choose) with `?ref=ig-bio` added, so
 every page after it knows where they came from. You can change where a link goes later without changing the link.
 
-- **Staying inside Instagram:** a link in an Instagram bio, story or DM opens in Instagram's own in-app browser.
-  The `/go/…` link is a single redirect on Jean's own domain, so it opens there like any normal link and people stay
-  in the app the whole way (opt-in, video, calendar). Nothing pushes them out to Safari. Apps like URL Genius do
+**For Instagram, post the "Instagram" version** shown next to each link: `https://jeanfxtrading.com/discord?ref=ig-bio`.
+It's the page itself, with no redirect, so there's one less thing for Instagram's link checks to look at. Visitors,
+opt-ins and bookings still count for the link; only its Clicks column stays at 0. Every page tells Meta its clean
+address (`og:url` and canonical), so `?ref=…` versions all count as the same page.
+
+- **Staying inside Instagram:** a link in an Instagram bio, story or DM opens in Instagram's own in-app browser,
+  and both versions of the link open there like any normal link, so people stay in the app the whole way (opt-in,
+  video, calendar). Nothing pushes them out to Safari. Apps like URL Genius do
   something different: they open a link in another app (e.g. a YouTube link in the YouTube app). Jean's funnel is a
   website, so the in-app browser is where it should open.
-- **Safe for Meta:** your own domain with one redirect looks like any normal website to Instagram's link checker
-  (unlike third-party link shorteners). Instagram's link preview bot is sent on without being counted, and every
-  page it lands on has the Privacy Policy, Terms and Earnings & Risk Disclaimer in the footer.
+- **Safe for Meta:** see "Kept safe for Instagram" above. Your own domain is better than third-party link
+  shorteners. Before putting a link on Jean's account, check it in Meta's Sharing Debugger (press Scrape Again after
+  any change) and try it from another account that has some history, not a brand-new one.
 - Bots and link previews (Instagram/iMessage/WhatsApp/Discord previews, crawlers) aren't counted.
 - "Clicks" vs "Visitors": the gap is people who tapped but left before the page loaded (common in in-app browsers).
 - Links without a tracked link still show up, worked out from the site or app they came from ("Instagram (no

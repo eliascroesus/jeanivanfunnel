@@ -271,6 +271,8 @@ tr.clickable:hover td { background: var(--wash); }
 .suggest button:hover { border-style: solid; color: var(--ink); }
 .short { display: inline-flex; align-items: center; gap: 6px; }
 .short code { padding: 3px 6px; border-radius: 6px; background: var(--wash); }
+.short small { min-width: 64px; color: var(--muted); font-size: 11px; }
+.linkpair { display: grid; gap: 6px; justify-items: start; }
 .made { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px; border-radius: 10px; background: rgba(12, 163, 12, .10); }
 .made code { font-size: 14px; }
 
@@ -486,6 +488,7 @@ dialog h2 { margin-bottom: 12px; }
       <p class="error" id="link-error" hidden></p>
       <div class="made" id="link-made" hidden style="margin-top:14px"></div>
       <p class="note">Short links look like <code id="example-link">/go/ig-bio</code>. Each tap is counted, then the person goes straight on to the page, so it's as fast as a normal link. You can change where a link goes later without changing the link itself.</p>
+      <p class="note"><b>For Instagram</b>, use the link's "Instagram" version (like <code>/discord?ref=ig-bio</code>): it's the page itself with no redirect, which is one less thing for Instagram's link checks to look at. Visitors, opt-ins and bookings still count for the link; only its Clicks column stays at 0.</p>
     </section>
     <section class="card">
       <div class="card__head"><h2>Your links</h2><p id="links-sub">Numbers for the date range at the top</p></div>
@@ -1344,6 +1347,16 @@ function renderAudience(f) {
 }
 
 /* ---------- Tracked links tab ---------- */
+// The link without the /go/ redirect: the page itself with ?ref=<name>. Visitors and everything after still count
+// for the link; only taps on it (Clicks) can't be counted. Best for Instagram, where a link with no redirect is
+// one less thing for its link checks to look at. Links that go to another site only have the /go/ version.
+function directUrl(slug, dest) {
+  if (!dest || dest[0] !== "/") return "";
+  const [path, query = ""] = dest.split("?");
+  const q = new URLSearchParams(query);
+  q.set("ref", slug);
+  return location.origin + path + "?" + q;
+}
 function renderLinks() {
   const ms = maps();
   const per = {};
@@ -1359,13 +1372,18 @@ function renderLinks() {
     body.append(h("tr", {},
       h("td", {}, h("span", { class: "cell-name" }, h("span", {}, h("span", { class: "dot", style: { background: `var(--c-${ch})` } }), def ? def.name : slug, !def ? h("span", { class: "badge badge--warn", style: { marginLeft: "6px" } }, "not set up") : null),
         h("small", {}, def ? (PLATFORM[def.channel] || def.channel) + " · goes to " + def.dest : "Someone used this link before it was made here"))),
-      h("td", { style: { textAlign: "left" } }, h("span", { class: "short" }, h("code", {}, "/go/" + slug), h("button", { class: "btn", type: "button", onclick: () => copy(url) }, "Copy"))),
+      h("td", { style: { textAlign: "left" } }, (() => {
+        const direct = def ? directUrl(slug, def.dest) : "";
+        return h("div", { class: "linkpair" },
+          direct ? h("span", { class: "short", title: "No redirect: best for Instagram" }, h("small", {}, "Instagram"), h("code", {}, direct.replace(location.origin, "")), h("button", { class: "btn", type: "button", onclick: () => copy(direct) }, "Copy")) : null,
+          h("span", { class: "short" }, h("small", {}, "Short"), h("code", {}, "/go/" + slug), h("button", { class: "btn", type: "button", onclick: () => copy(url) }, "Copy")));
+      })()),
       h("td", {}, fmt(d.clicks)), h("td", {}, fmt(d.visitors)), h("td", {}, fmt(d.optins)), h("td", {}, fmt(d.booked)),
       h("td", {}, h("button", { class: "btn btn--ghost", type: "button", onclick: () => editLink(slug) }, def ? "Edit" : "Set up"),
         def ? h("button", { class: "btn btn--ghost btn--danger", type: "button", onclick: () => removeLink(slug) }, "Remove") : null)));
   });
   if (!slugs.length) body.append(h("tr", {}, h("td", { colspan: 7, class: "empty" }, "No links yet. Make your first one above.")));
-  table.replaceChildren(h("thead", {}, h("tr", {}, h("th", {}, "Link"), h("th", { style: { textAlign: "left" } }, "Short link"), h("th", {}, "Clicks"), h("th", {}, "Visitors"), h("th", {}, "Opt-ins"), h("th", {}, "Booked"), h("th", {}))), body);
+  table.replaceChildren(h("thead", {}, h("tr", {}, h("th", {}, "Link"), h("th", { style: { textAlign: "left" } }, "Links to post"), h("th", {}, "Clicks"), h("th", {}, "Visitors"), h("th", {}, "Opt-ins"), h("th", {}, "Booked"), h("th", {}))), body);
 }
 const slugify = t => String(t).toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 const PREFIX = { youtube: "yt", instagram: "ig", tiktok: "tt", facebook: "fb", x: "x", threads: "threads", snapchat: "snap", discord: "discord", email: "email", sms: "sms", google: "google", other: "" };
@@ -1512,14 +1530,16 @@ linkForm.addEventListener("submit", async e => {
   try {
     const r = await api("link", { body: { slug, name: linkForm.name.value.trim(), channel: linkForm.channel.value, dest } });
     setLinks(r.links);
-    const url = location.origin + "/go/" + r.link.slug;
+    const url = location.origin + "/go/" + r.link.slug, direct = directUrl(r.link.slug, r.link.dest);
+    const insta = r.link.channel === "instagram" && direct;
     const made = $("#link-made");
-    made.replaceChildren(h("span", {}, linkForm.editing.value ? "Saved: " : "Your link: "), h("code", {}, url), h("button", { class: "btn btn--primary", type: "button", onclick: () => copy(url) }, "Copy link"),
-      h("span", { class: "muted" }, "Use this one only in " + r.link.name + "."));
+    made.replaceChildren(h("span", {}, linkForm.editing.value ? "Saved: " : "Your link: "), h("code", {}, insta ? direct : url),
+      h("button", { class: "btn btn--primary", type: "button", onclick: () => copy(insta ? direct : url) }, "Copy link"),
+      h("span", { class: "muted" }, insta ? "No redirect, best for Instagram. Use it only in " + r.link.name + "." : "Use this one only in " + r.link.name + "."));
     made.hidden = false;
     resetLinkForm();
     render();
-    copy(url);
+    copy(insta ? direct : url);
   } catch (x) {
     err.textContent = x.message;
     err.hidden = false;

@@ -384,6 +384,9 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
 .addcal__btn:hover { transform: translateY(-1px); box-shadow: 0 0 0 2px var(--accent), 0 0 18px rgba(var(--accent-rgb), .25); }
 .addcal__btn svg { width: 30px; height: 30px; }
 .addcal__btn[hidden] { display: none; }
+/* Under the opt-in button: why we ask for their details, with the privacy links */
+.form-note { margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: #6b6b6b; text-align: center; }
+.form-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .confirm-note { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
 .confirm-note b { color: #fff; }
 /* Phones: one card per row, icon on the left, so the three steps fit on about one screen */
