@@ -4,7 +4,9 @@
    - reading the visitor's device, app and bot-ness from the user agent
    Files in api/_lib are helpers, not pages: Vercel doesn't serve anything starting with "_". */
 
-const PREFIX = "rt:";   // every key starts with this, so the database can be shared with other things
+// Every key starts with this. Ricky's funnel uses "rt:", so even if both sites are connected to the same Upstash
+// database, Jean's numbers, links and logins never mix with Ricky's (and "Delete all numbers" only deletes Jean's).
+const PREFIX = "jfx:";
 
 // Vercel → Storage → Upstash for Redis adds KV_REST_API_URL / KV_REST_API_TOKEN to the project;
 // Upstash's own dashboard calls them UPSTASH_REDIS_REST_URL / _TOKEN. A custom prefix picked while
@@ -32,7 +34,7 @@ async function call(path, body) {
   if (out.error) throw new Error("Redis: " + out.error);
   return out;
 }
-// One command: redis("HGET", "rt:links", "yt-bio")
+// One command: redis("HGET", "jfx:links", "ig-bio")
 const redis = async (...cmd) => (await call("", cmd.map(String))).result;
 // Several commands in one request: pipeline([["HGETALL", k1], ["HGETALL", k2]]) → [result1, result2]
 async function pipeline(cmds) {

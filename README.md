@@ -251,6 +251,9 @@ visits on this browser"; on your phone, open any funnel page with `?rt=off` at t
   and sends small batches of events to `/api/e`: page views, funnel steps (each once per person), and which 5% parts
   of each video were watched with sound. The VSL autoplays muted, so only watching after "Click To Unmute" (or play)
   counts. `assets/site/funnel.js` tells it about each step.
+- Everything is stored under keys starting with `jfx:`. Ricky's funnel uses `rt:`, so even when both Vercel projects
+  are connected to the same Upstash database, the two dashboards never share numbers, links or logins, and "Delete
+  all numbers" only deletes this site's. (Until Nov 10, 2026 both used `rt:`, so numbers from before then are mixed.)
 - `api/go.js` handles `/go/<name>`; `api/admin.js` serves the dashboard's data behind `ADMIN_PASSWORD`;
   `api/_lib/store.js` holds the shared database code (Upstash's REST API, no packages to install). The dashboard
   page is `admin/index.html`.

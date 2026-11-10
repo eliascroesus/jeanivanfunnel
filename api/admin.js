@@ -16,7 +16,7 @@ const DAY_MS = 864e5;
 const LIVE_MS = 5 * 60e3;
 
 const secret = () => process.env.ADMIN_SECRET || process.env.ADMIN_PASSWORD || "";
-const sign = exp => crypto.createHmac("sha256", secret()).update("rt-admin:" + exp).digest("base64url");
+const sign = exp => crypto.createHmac("sha256", secret()).update(PREFIX + "admin:" + exp).digest("base64url");   // a login on Ricky's /admin never works here
 function makeToken() {
   const exp = Date.now() + 30 * DAY_MS;
   return exp + "." + sign(exp);
