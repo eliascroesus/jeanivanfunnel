@@ -17,8 +17,17 @@ Trading funnel for jeanfxtrading.com. There are two sets of pages:
 
    Investment answers in `CONFIG.disqualify` get the free Discord instead of the calendar. Visitors who didn't opt
    in first give name, email and phone too (that counts as their opt-in).
-3. **Booked** (`/booked`): "Your call is NOT confirmed yet", Step #1 the thank-you video, Step #2 the Confirm In
-   Gmail / Outlook buttons and the FAQ videos (one per row), then the results and Jean's story.
+3. **Booked** (`/booked`): "Your call is NOT confirmed yet", Step #1 the thank-you video, Step #2 "Confirm Your Call
+   Now" (three cards: reply "Yes" to the email, reply to the text on iMessage or WhatsApp, add it to your calendar
+   with Google / Apple / Outlook buttons), Step #3 the FAQ videos (one per row), then the results and Jean's story.
+
+Every page ends with the same footer as the Ricky funnel: links to the **Privacy Policy** (`/privacy`), **Terms of
+Service** (`/terms`) and **Earnings & Risk Disclaimer** (`/disclaimer`), a Contact link (jean@fx.jeanfxtrading.com),
+the earnings and trading-risk disclaimer, and the "not part of Facebook / Instagram / Meta" line. The three legal
+pages are in `privacy/`, `terms/` and `disclaimer/` (styled by `assets/legal.css`); they're Ricky's pages rewritten
+for Jean and trading, with the trading-specific parts added (trading risk, prop firm payouts aren't profit, the
+standard CFTC Rule 4.41 note on simulated results, not financial advice). Change the "Last updated" date when you
+edit them.
 
 "Meet Jean Ivan" tells his story with his own photos in `assets/jean-ivan/story/`. Their rows in the sheet show
 **Redesign** (`/apply`) or **Redesign 2** (`/apply-2`) in the Version column.
@@ -77,6 +86,7 @@ then filled into that person's row, matched by email:
 | `/apply-2` and `/old/apply` (V1) | Instagram, Experience, Main Goal, Investment, Main Problem (biggest issue), Ready To Fix, Application At |
 | Booking a call | Call Booked At |
 | GoHighLevel | Sent To GHL (when the row was sent; empty = not sent yet) |
+| Every step | Source Link: the `/go/…` tracked link (or app/site) they came from, as on `/admin` |
 
 The "Version" column says which pages each lead went through: **Redesign** / **Redesign 2** (the main `/apply` /
 `/apply-2`), **V1** / **V2** (the old `/old/apply` / `/old/apply-2`) or **Waitlist**. Setup steps are at the top of `lead-capture.gs`. The Web app URL
@@ -131,9 +141,16 @@ Share → Permanent link); the old pages use the same calendar (with Calendly as
 page fills in the calendar's name, email and phone, and moves to `/booked` when GoHighLevel reports the booking.
 The `/discord` phone box checks
 numbers against the same rules as the calendar (libphonenumber's, in `assets/lead-form.js`), so the calendar
-never rejects a number the opt-in accepted. On `/booked`, **Confirm In Gmail** opens their inbox searched for the
-confirmation email (`confirmFrom` / `confirmSubject` in `CONFIG`), and **Confirm In Outlook** opens Outlook on the web. Bookings in the GoHighLevel calendar also start its
+never rejects a number the opt-in accepted. Bookings in the GoHighLevel calendar also start its
 "Customer Booked Appointment" workflows (confirmation texts, reminders, the Telegram alert below); Calendly bookings don't.
+
+**Add it to your calendar** (`/booked`, Step #2, and `/old/booked`): the Google, Apple and Outlook buttons add the
+call with its time, using `assets/call-calendar.js`. Apple Calendar gets a calendar file from `api/ics.js` (its title and
+text are set there). The time comes from GoHighLevel's "booking complete" message when the message includes it.
+GoHighLevel doesn't document what that message holds, so if a test booking shows "set the time from your confirmation
+email" under the buttons, the message had no time. Google and Outlook then open a new event with the title filled in,
+and the Apple button is hidden. Add `?debug` to a page 2 link and the browser console shows every message the calendar
+sends. The call title, text and fallback length are `CONFIG.call` in `funnel.js`.
 
 ### Telegram alerts
 
@@ -154,3 +171,76 @@ captions are switched off and the page draws its own play, progress, sound and f
 player library is in `assets/vimeo-player.min.js`). The VSL and the thank-you video autoplay muted behind a box
 that restarts them with sound when clicked. `/discord` loads the VSL and the calendar off-screen once someone
 starts the form, so page 2 opens fast.
+
+**The end of a video:** Vimeo's own end screen shows "More from …" with other videos from the account. So every video
+(main pages and old pages) stops half a second before its end, goes back to the start and shows a gold **Replay**
+button instead; Vimeo's end screen never shows. If you also want it off in Vimeo itself, set each video's **Embed →
+End screen** to "Empty" in Vimeo, but the pages don't need it.
+
+## Analytics dashboard (/admin)
+
+The same dashboard as the Ricky funnel. `/admin` shows, for any date range, traffic source and A/B version:
+
+- **Link clicks** on your tracked short links, per place you posted them (Instagram bio, story, DMs…), and how many
+  of those clicks turned into visitors, opt-ins, applications and booked calls.
+- **The funnel step by step**: visited → started the opt-in form → opted in → reached page 2 → played the VSL →
+  started the application → finished it → qualified → booked. Each person is counted once per step, and the
+  biggest drop-off is pointed out.
+- **Videos**: who saw each video (VSL, thank-you video, each FAQ), who pressed play with sound, and a drop-off curve
+  showing what share are still watching at every 5% of the video.
+- **A/B test**: V1 (`/apply`, one question at a time) against V2 (`/apply-2`, form beside the calendar) at every step,
+  with a plain-English verdict on whether the difference in booked calls is real yet (95% confidence) or still luck.
+- **Application questions**, **pages & buttons** (including the add-to-calendar buttons), **audience**
+  (iPhone/Android/computer, Instagram in-app browser vs Safari, country), **over time** charts and a **live** list.
+
+### Setup (once, about 5 minutes on Vercel)
+
+1. **Database**: Vercel → this project → **Storage** → **Create Database** → **Upstash for Redis** (free plan) →
+   connect it to this project for all environments. That adds `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+2. **Password**: **Settings → Environment Variables** → add `ADMIN_PASSWORD` (whatever you want to log in with).
+   Optional: `TRACK_TIMEZONE` (default `America/New_York`) sets which time zone "today" uses.
+3. **Redeploy** (Deployments → ⋯ → Redeploy), then open `https://jeanfxtrading.com/admin`.
+
+Until the database is connected, the pages work exactly as before and simply don't count anything.
+
+### Tracked links (for the Instagram bio and everything else)
+
+Make one link per place you post, in **/admin → Tracked links** (one-click presets for Instagram bio, story, DMs,
+reels, YouTube, TikTok…). Each looks like `https://jeanfxtrading.com/go/ig-bio`: it counts the tap, then sends the
+person straight on to `/discord` (or `/apply`, `/apply-2`, or any other link you choose) with `?ref=ig-bio` added, so
+every page after it knows where they came from. You can change where a link goes later without changing the link.
+
+- **Staying inside Instagram:** a link in an Instagram bio, story or DM opens in Instagram's own in-app browser.
+  The `/go/…` link is a single redirect on Jean's own domain, so it opens there like any normal link and people stay
+  in the app the whole way (opt-in, video, calendar). Nothing pushes them out to Safari. Apps like URL Genius do
+  something different: they open a link in another app (e.g. a YouTube link in the YouTube app). Jean's funnel is a
+  website, so the in-app browser is where it should open.
+- **Safe for Meta:** your own domain with one redirect looks like any normal website to Instagram's link checker
+  (unlike third-party link shorteners). Instagram's link preview bot is sent on without being counted, and every
+  page it lands on has the Privacy Policy, Terms and Earnings & Risk Disclaimer in the footer.
+- Bots and link previews (Instagram/iMessage/WhatsApp/Discord previews, crawlers) aren't counted.
+- "Clicks" vs "Visitors": the gap is people who tapped but left before the page loaded (common in in-app browsers).
+- Links without a tracked link still show up, worked out from the site or app they came from ("Instagram (no
+  tracked link)", "Direct / unknown"), and `?utm_source=` links work too.
+- A visitor keeps the last link that brought them for 30 days, so a booking two days later still counts for it.
+- The link also goes to the Google Sheet in a **Source Link** column (and to a GoHighLevel field named "Source
+  Link" if you make one). To get the column: paste the updated `google-sheets/lead-capture.gs`, run `setup`, then
+  Deploy → Manage deployments → New version. Until then everything else works as before.
+
+### Your own visits
+
+Testing the funnel from your own browser adds to the numbers. In **/admin → Settings**, tick "Don't count my
+visits on this browser"; on your phone, open any funnel page with `?rt=off` at the end once (`?rt=on` undoes it).
+**Settings → Delete all numbers** starts the counts from zero (e.g. after testing); tracked links stay.
+
+### How it works
+
+- `assets/track.js` (loaded by the four main pages) gives each browser a random id (no names, emails or cookies),
+  and sends small batches of events to `/api/e`: page views, funnel steps (each once per person), and which 5% parts
+  of each video were watched with sound. The VSL autoplays muted, so only watching after "Click To Unmute" (or play)
+  counts. `assets/site/funnel.js` tells it about each step.
+- `api/go.js` handles `/go/<name>`; `api/admin.js` serves the dashboard's data behind `ADMIN_PASSWORD`;
+  `api/_lib/store.js` holds the shared database code (Upstash's REST API, no packages to install). The dashboard
+  page is `admin/index.html`.
+- Counts are stored per day, link and A/B version (plus per month for long ranges), so the dashboard stays fast for
+  any date range. Upstash's free plan covers a lot of traffic; each event batch is one request.

@@ -6,6 +6,7 @@
  *                            Ready To Fix, Instagram;
  *                            V2 (/apply-2) and /waitlist fill Situation, Biggest Goal, Obstacles, Instagram, Investment.
  *   - Booking a call       → stamps "Call Booked At" on their row.
+ *   - Source Link          → the /go/… tracked link (or app/site) they came from, as on /admin.
  *   - GoHighLevel (optional) → the same lead also goes to GoHighLevel; see further down this file.
  *     Leads already in the sheet are sent with the sheet's "GoHighLevel" menu → "Push old leads to GoHighLevel".
  *   - Telegram (optional)  → booked calls are posted to a Telegram group; see the bottom of this file.
@@ -59,6 +60,7 @@ const COLUMNS = [
   ['Main Goal', 'motivation'],
   ['Ready To Fix', 'ready'],
   ['Sent To GHL', '@ghl'],   // when the lead was last sent to GoHighLevel; empty = not sent yet
+  ['Source Link', 'source_link'],   // the /go/… link they came from, as on /admin (or the app/site)
 ];
 const HEADERS = COLUMNS.map(([header]) => header);
 const EMAIL_COL = COLUMNS.findIndex(([, field]) => field === 'email');

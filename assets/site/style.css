@@ -149,6 +149,21 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
 }
 .vp__big svg { width: 40%; height: 40%; margin-left: 6%; }
 .vp.is-paused .vp__big { opacity: 1; }
+.vp.is-ended .vp__big { opacity: 0; }
+/* At the end: back to the start with our Replay button, so Vimeo's end screen ("More from …") never shows */
+.vp__replay {
+  position: absolute; inset: 0; z-index: 3; display: grid; place-content: center; justify-items: center; gap: 12px;
+  border: 0; padding: 0; background: rgba(0, 0, 0, .62); color: #fff; cursor: pointer;
+  font: inherit; font-size: 16px; font-weight: 800; letter-spacing: .3px;
+}
+.vp__replay[hidden] { display: none; }
+.vp__replay i {
+  width: clamp(64px, 11vw, 96px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #111;
+  background: linear-gradient(90deg, #d4ba00 0%, var(--accent) 48%, var(--accent-bright) 100%);
+  box-shadow: 0 0 0 8px rgba(var(--accent-rgb), .15), 0 0 22px rgba(var(--accent-rgb), .35);
+}
+.vp__replay svg { width: 44%; height: 44%; }
+.vp.is-hard-end .vp__replay { background: #000; }
 .vp:has(.vp__listen:not([hidden])) .vp__big { opacity: 0; }
 .vp__bar {
   position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 4px;
@@ -344,22 +359,43 @@ h2 { font-size: clamp(29px, 4.8vw, 48px); font-weight: 900; line-height: 1.08; l
 }
 
 /* ---------- /booked ---------- */
-.confirm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 600px; margin: 0 auto; }
-.confirm__btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px 12px;
-  border-radius: 12px; background: #fff; color: #1f1f1f; text-decoration: none; white-space: nowrap;
-  font-weight: 800; font-size: clamp(13px, 3.4vw, 17px); box-shadow: 0 0 0 2px rgba(var(--accent-rgb), .5), 0 0 16px rgba(var(--accent-rgb), .15);
-  transition: transform .15s ease, box-shadow .15s ease;
+/* /booked Step #2: three cards (email, messages, calendar), side by side on computers, stacked on phones */
+.csteps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }
+.cstep {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 18px 22px; border-radius: 18px;
+  background: linear-gradient(180deg, #121212 0%, #080808 100%); border: 1px solid rgba(var(--accent-rgb), .35);
 }
-.confirm__btn:hover { transform: translateY(-1px); box-shadow: 0 0 0 2px var(--accent), 0 0 22px rgba(var(--accent-rgb), .25); }
-.confirm__btn svg { flex: none; width: 26px; height: 26px; }
-.confirm__label small { font: inherit; }
-.confirm-note { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+.cstep__icon {
+  flex: none; width: 66px; height: 66px; margin-bottom: 4px; border-radius: 50%; display: grid; place-items: center; color: #111;
+  background: linear-gradient(90deg, #d4ba00 0%, var(--accent) 48%, var(--accent-bright) 100%);
+  box-shadow: 0 0 0 7px rgba(var(--accent-rgb), .12), 0 0 22px rgba(var(--accent-rgb), .25);
+}
+.cstep__icon svg { width: 31px; height: 31px; }
+.cstep h3 { font-size: 17.5px; font-weight: 800; line-height: 1.3; letter-spacing: -.2px; }
+.cstep h3 b { color: var(--accent-bright); font-weight: 900; }
+.cstep p { font-size: 14.5px; line-height: 1.5; color: var(--muted); max-width: 32ch; }
+.cstep p b { color: #fff; }
+.addcal { display: flex; justify-content: center; gap: 8px; width: 100%; margin-top: 6px; }
+.addcal__btn {
+  flex: 1 1 0; max-width: 104px; display: grid; justify-items: center; gap: 5px; padding: 11px 6px 9px; border-radius: 12px;
+  background: #fff; color: #1f1f1f; text-decoration: none; font-size: 12.5px; font-weight: 800;
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), .5); transition: transform .15s ease, box-shadow .15s ease;
+}
+.addcal__btn:hover { transform: translateY(-1px); box-shadow: 0 0 0 2px var(--accent), 0 0 18px rgba(var(--accent-rgb), .25); }
+.addcal__btn svg { width: 30px; height: 30px; }
+.addcal__btn[hidden] { display: none; }
+.confirm-note { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
 .confirm-note b { color: #fff; }
-@media (max-width: 480px) {
-  .confirm__btn { justify-content: flex-start; padding: 11px 12px; gap: 9px; }
-  .confirm__label { display: grid; text-align: left; line-height: 1.15; }
-  .confirm__label small { font-size: 11px; font-weight: 600; color: #5f6368; }
+/* Phones: one card per row, icon on the left, so the three steps fit on about one screen */
+@media (max-width: 760px) {
+  .csteps { grid-template-columns: 1fr; gap: 12px; max-width: 480px; }
+  .cstep { display: grid; grid-template-columns: 54px 1fr; column-gap: 14px; row-gap: 4px; align-items: start; text-align: left; padding: 16px 16px 16px 14px; }
+  .cstep__icon { grid-row: span 2; width: 52px; height: 52px; margin: 2px 0 0; box-shadow: 0 0 0 5px rgba(var(--accent-rgb), .12); }
+  .cstep__icon svg { width: 25px; height: 25px; }
+  .cstep h3 { font-size: 16px; }
+  .cstep p { font-size: 14px; max-width: none; }
+  .addcal { grid-column: 1 / -1; margin-top: 10px; }
+  .addcal__btn { max-width: none; }
 }
 /* FAQ videos: one per row, big */
 .vid-grid { display: grid; gap: 34px; max-width: 960px; margin: 34px auto 0; text-align: left; }
@@ -384,6 +420,12 @@ footer { border-top: 1px solid var(--line); padding: 38px 0 46px; background: rg
 footer .brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; font-size: 13px; }
 footer .brand img { width: 28px; height: 28px; border-radius: 6px; }
 footer p { font-size: 11.5px; color: var(--faint); line-height: 1.7; max-width: 920px; margin: 0 auto; text-align: center; }
+footer p + p { margin-top: 10px; }
+footer p b { color: var(--muted); }
+footer a { color: inherit; }
+footer .foot-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-bottom: 16px; font-size: 13px; font-weight: 700; color: var(--muted); }
+footer .foot-nav a { text-decoration: none; }
+footer .foot-nav a:hover { color: #fff; text-decoration: underline; }
 .has-sticky footer { padding-bottom: 110px; }
 
 /* ---------- Enlarged results image ---------- */

@@ -18,18 +18,21 @@ const CONFIG = {
   },
   // FAQ videos on /booked: [question, Vimeo link]. Ones without a link are left out.
   faqVideos: [
-    ["What's Inside The JFX Elite Mentorship?", ""],
-    ["Is JeanFX Legit?", "https://player.vimeo.com/video/1243211359"],
-    ["Will I Work With Jean Ivan Or An Assistant?", "https://player.vimeo.com/video/1243211357"],
-    ["Can I Do This With A Full-Time Job?", "https://player.vimeo.com/video/1243211356"],
-    ["How Much Money Do I Need To Start Trading?", "https://player.vimeo.com/video/1243211358"],
+    // [question, Vimeo link, short name for /admin's video stats]
+    ["What's Inside The JFX Elite Mentorship?", "", "faqInside"],
+    ["Is JeanFX Legit?", "https://player.vimeo.com/video/1243211359", "faqLegit"],
+    ["Will I Work With Jean Ivan Or An Assistant?", "https://player.vimeo.com/video/1243211357", "faqWho"],
+    ["Can I Do This With A Full-Time Job?", "https://player.vimeo.com/video/1243211356", "faqTime"],
+    ["How Much Money Do I Need To Start Trading?", "https://player.vimeo.com/video/1243211358", "faqMoney"],
   ],
   ghlCalendarUrl: "https://api.leadconnectorhq.com/widget/booking/fOpQ0g6PeGi0AV9lhKP8",
   discordUrl: "https://discord.gg/5qGhKE6A5j",
   // Investment answers that don't qualify for a call: they see the free Discord instead of the calendar.
   disqualify: ["Under $500", "I want to, but don't have the resources to fund my goals"],
-  confirmFrom: "",
-  confirmSubject: "Strategy Call",
+  // "Add it to your calendar" on /booked. The time comes from the calendar when it sends it; the length is a fallback.
+  // (The Apple Calendar file's title and text are set in api/ics.js.)
+  call: { title: "Strategy Call With Jean", minutes: 30,
+    details: "Your strategy call with Jean (Jean FX Trading). The link to join is in your confirmation email and texts." },
 };
 
 // The application on /apply, one question at a time (same questions as the old /apply-2).
@@ -98,6 +101,8 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const PAGE = document.body.dataset.page;
+// Analytics for /admin (assets/track.js). If that file didn't load, these do nothing and the page works as usual.
+const analytics = window.rt || { start() {}, set() {}, once() {}, hit() {}, flush() {}, label: () => "", video: () => ({ view() {}, time() {}, ended() {} }) };
 
 // Kept in the browser for 30 days (shared with the main funnel), so a reload keeps what they entered.
 const store = {
@@ -144,6 +149,16 @@ function abPage() {
   return page;
 }
 
+// The A/B version /admin counts things under: V1 = /apply, V2 = /apply-2. Page 2 is its own; before and after it,
+// the one they were given at opt-in (none before the opt-in, since the split happens there).
+const TRACK_VER = { apply: "V1", apply2: "V2" };
+function trackVersion() {
+  if (TRACK_VER[PAGE]) return TRACK_VER[PAGE];
+  if (!lead.email) return "";
+  try { return TRACK_VER[localStorage.getItem("jeanivan_ab_page")] || ""; } catch { return ""; }
+}
+analytics.start({ page: PAGE, ver: trackVersion() });
+
 /* ---------- Send to the Google Sheet (and from there to GoHighLevel) ---------- */
 // type "optin" adds a row; "application" and "booked" fill in that person's row (matched by email).
 function sendLead(data, type = "optin") {
@@ -156,6 +171,7 @@ function sendLead(data, type = "optin") {
     page_url: location.href.split("#")[0],
     ...Object.fromEntries(UTM_KEYS.map(k => [k, tracking[k] || ""])),
     referrer: tracking.referrer || document.referrer,
+    source_link: analytics.label(),   // the /go/… link (or app/site) they came from, as on /admin
     device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
   });
@@ -166,6 +182,7 @@ function sendLead(data, type = "optin") {
 /* ---------- Videos (Vimeo, with our own controls) ---------- */
 const VIMEO_CLEAN = { title: 0, byline: 0, portrait: 0, badge: 0, vimeo_logo: 0, pip: 0, playsinline: 1, dnt: 1, autopause: 0, texttrack: "false" };
 const ICONS = {
+  replay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 3.5v5h5"/></svg>',
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>',
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
   sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5c1.5 1.5 1.5 5.5 0 7M19.5 5.5c3.2 3.2 3.2 9.8 0 13"/></svg>',
@@ -182,16 +199,16 @@ function vimeoEmbedUrl(url, custom, autoplay, start) {
 }
 // Puts a Vimeo video in a .vslframe box. autoplay = starts muted with "Click to unmute" (the VSL and thank-you video);
 // start = plays with sound straight away (a video someone just clicked).
-function mountVideo(box, url, { autoplay = false, start = false, title = "Video" } = {}) {
+function mountVideo(box, url, { autoplay = false, start = false, title = "Video", name = "" } = {}) {
   if (!box || !url || box.classList.contains("has-embed")) return;
   box.classList.add("has-embed");
   const custom = !!window.Vimeo;   // without the player library Vimeo keeps its own controls
   box.innerHTML = `<iframe src="${esc(vimeoEmbedUrl(url, custom, autoplay, start).href)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="${esc(title)}"${autoplay || start ? "" : ' loading="lazy"'}></iframe>`;
-  if (custom) videoControls(box, autoplay);
+  if (custom) videoControls(box, autoplay, name);
 }
 // A video that only loads when it's clicked: Vimeo's still and a play button until then, so a page with several
 // videos doesn't start several players at once (the FAQ videos on /booked).
-function videoOnClick(box, url, title) {
+function videoOnClick(box, url, title, name) {
   if (!box || !url) return;
   box.classList.add("vp", "is-paused", "vp--still");
   box.innerHTML = `<button class="vp__hit" type="button" aria-label="Play: ${esc(title)}"></button><span class="vp__big" aria-hidden="true">${ICONS.play}</span>`;
@@ -209,12 +226,15 @@ function videoOnClick(box, url, title) {
   $(".vp__hit", box).addEventListener("click", () => {
     box.classList.remove("vp", "is-paused", "vp--still");
     box.style.backgroundImage = "";
-    mountVideo(box, url, { start: true, title });
+    mountVideo(box, url, { start: true, title, name });
   }, { once: true });
 }
-function videoControls(box, autoplay) {
+function videoControls(box, autoplay, name) {
   const player = new Vimeo.Player(box.querySelector("iframe"));
   players.push(player);
+  // Analytics: who saw it, who watched with sound, and how far (a muted autoplay doesn't count as watching).
+  const watch = name ? analytics.video(name) : { view() {}, time() {}, ended() {} };
+  watch.view();
   // No captions (Vimeo switches them on by itself during a muted autoplay).
   const noCaptions = () => player.disableTextTrack().catch(() => {});
   player.ready().then(noCaptions).catch(() => {});
@@ -230,6 +250,7 @@ function videoControls(box, autoplay) {
       <button class="vp__btn vp__mute" type="button" aria-label="Sound on or off">${ICONS.sound}${ICONS.muted}</button>
       <button class="vp__btn vp__full" type="button" aria-label="Full screen">${ICONS.full}</button>
     </div>
+    <button class="vp__replay" type="button" hidden><i>${ICONS.replay}</i><span>Replay</span></button>
     ${autoplay ? `<button class="listen vp__listen" type="button">${ICONS.listen}<strong>Your Video Is Playing<br>Click To Unmute</strong></button>` : ""}`);
   box.classList.add("vp", "is-paused");
   box.classList.toggle("is-muted", autoplay);
@@ -246,14 +267,38 @@ function videoControls(box, autoplay) {
     if (listen && !listen.hidden) return unmute();
     if (paused) play(); else player.pause().catch(() => {});
   };
+  // The end: Vimeo would show its own end screen ("More from …" with other videos). So the video stops just before
+  // its last half second, goes back to the start and shows our Replay button instead. If Vimeo ever gets to the
+  // real end first, the Replay layer covers its end screen completely.
+  const replay = $(".vp__replay", box);
+  let ended = false;
+  const finish = hard => {
+    if (ended) return;
+    ended = true; paused = true;
+    box.classList.add("is-paused", "is-ended");
+    box.classList.toggle("is-hard-end", !!hard);
+    replay.hidden = false;
+    if (listen) listen.hidden = true;
+    fill.style.width = "0%";
+    player.pause().catch(() => {});
+    player.setCurrentTime(0).catch(() => {});
+    watch.ended(!muted);
+  };
+  replay.addEventListener("click", () => { setMuted(false); player.setCurrentTime(0).catch(() => {}); play(); });
   player.on("play", () => {
     paused = false; box.classList.remove("is-paused");
+    if (ended) { ended = false; replay.hidden = true; box.classList.remove("is-ended", "is-hard-end"); }
     player.getMuted().then(m => { muted = m; box.classList.toggle("is-muted", m); }).catch(() => {});
     players.forEach(p => { if (p !== player) p.pause().catch(() => {}); });   // one video at a time
   });
   player.on("pause", () => { paused = true; box.classList.add("is-paused"); });
-  player.on("ended", () => { paused = true; box.classList.add("is-paused"); });
-  player.on("timeupdate", d => { duration = d.duration || duration; fill.style.width = (d.percent || 0) * 100 + "%"; });
+  player.on("ended", () => finish(true));
+  player.on("timeupdate", d => {
+    duration = d.duration || duration;
+    watch.time(d.seconds, d.percent, d.duration, !muted && !paused && !ended);
+    if (!ended && !paused && d.duration > 2 && d.seconds >= d.duration - 0.6) return finish(false);
+    if (!ended) fill.style.width = (d.percent || 0) * 100 + "%";
+  });
   const hit = $(".vp__hit", box);
   hit.addEventListener("pointerdown", e => { touch = e.pointerType === "touch"; });
   hit.addEventListener("click", () => {
@@ -368,16 +413,19 @@ if (PAGE === "discord") {
     form.name.setAttribute("aria-invalid", !name); if (!name) bad.push("your name");
     form.phone.setAttribute("aria-invalid", !p?.ok); if (!p?.ok) bad.push(p ? "a valid " + (p.country === "GB" ? "UK" : p.country) + " phone number (" + PHONE_RULES[p.country].hint + ")" : "a phone number");
     form.email.setAttribute("aria-invalid", !emailOk(email)); if (!emailOk(email)) bad.push("a valid email");
-    if (bad.length) { err.textContent = "Please add " + bad.join(", ") + "."; err.hidden = false; return; }
+    if (bad.length) { err.textContent = "Please add " + bad.join(", ") + "."; err.hidden = false; analytics.once("s:optin_error"); return; }
     err.hidden = true;
     lead = { name, email, phone: p.e164, phoneNational: form.phone.value.trim(), country: p.country };
     saveDraft();
     store.set("lead", lead);
     const next = abPage();
+    analytics.set({ ver: TRACK_VER[next] });
+    analytics.once("s:optin", { now: true });
     sendLead({ name, email, phone: p.e164, country: p.country, version: CONFIG.versions[next] });
     try { sessionStorage.setItem("jeanivan_just_joined", "1"); } catch {}
     go(next);
   });
+  form.addEventListener("focusin", () => analytics.once("s:optin_start"));
   // Load the next page's video player and calendar in hidden frames once they start the form, so page 2 opens fast.
   form.addEventListener("focusin", () => setTimeout(() => {
     [vimeoEmbedUrl(CONFIG.videos.vsl, true, false).href, CONFIG.ghlCalendarUrl].filter(Boolean).forEach(src => {
@@ -396,9 +444,9 @@ if (PAGE === "discord") {
 if (PAGE === "apply" || PAGE === "apply2") {
   // They just joined: a short burst of gold confetti, once.
   try { if (sessionStorage.getItem("jeanivan_just_joined")) { sessionStorage.removeItem("jeanivan_just_joined"); confetti(); } } catch {}
-  mountVideo($("#vsl"), CONFIG.videos.vsl, { autoplay: true, title: "Watch this first" });
+  mountVideo($("#vsl"), CONFIG.videos.vsl, { autoplay: true, title: "Watch this first", name: "vsl" });
   const nqBtn = $("#nq-discord");
-  if (nqBtn) nqBtn.href = CONFIG.discordUrl;
+  if (nqBtn) { nqBtn.href = CONFIG.discordUrl; nqBtn.addEventListener("click", () => analytics.once("s:nq_discord", { now: true })); }
 }
 if (PAGE === "apply") {
   const quiz = $("#quiz"), form = $("#quiz-form"), bar = $("#quiz-bar"), back = $("#quiz-back");
@@ -446,9 +494,11 @@ if (PAGE === "apply") {
     err.hidden = true;
     answers[q.key] = value;
     if (["name", "email", "phone"].includes(q.key)) { lead[q.key] = value; store.set("lead", lead); }
+    else { analytics.once("s:apply_start"); analytics.once("q:a1:" + q.key); }
     const last = index === steps.length - 1;
     if (q.key === "phone") {
       // Name, email and phone given here count as the opt-in (a new row in the sheet, the Discord pipeline in GoHighLevel).
+      analytics.once("s:optin", { now: true });
       sendLead({ name: lead.name, email: lead.email, phone: lead.phone, country: lead.country || "" });
       initCalendar();
     } else if (lead.email && lead.phone) {
@@ -458,6 +508,7 @@ if (PAGE === "apply") {
       if (last) data.stage = out ? "not_qualified" : "applied";
       const key = JSON.stringify(data);
       if (key !== sent) { sent = key; sendLead(data, "application"); }
+      if (last) analytics.once(out ? "s:not_qualified" : "s:applied", { now: true });
     }
     if (!last) return show(index + 1);
     quiz.hidden = true;
@@ -549,10 +600,12 @@ if (PAGE === "apply2") {
       optinSent = true;
       lead = { ...c };
       store.set("lead", lead);
+      analytics.once("s:optin", { now: true });
       sendLead({ name: c.name, email: c.email, phone: c.phone, country: c.country }, "optin");
       initCalendar();
     }
     const a = answers(), done = Object.values(a).every(Boolean) && (knowThem || !!c);
+    Object.entries(a).forEach(([k, v]) => { if (v) { analytics.once("s:apply_start"); analytics.once("q:a2:" + k); } });
     const out = done && CONFIG.disqualify.includes(a.investment), open = done && !out;
     cal.classList.toggle("is-locked", !open);
     frameBox.inert = !open;
@@ -568,6 +621,7 @@ if (PAGE === "apply2") {
     timer = setTimeout(() => {
       const data = { name: lead.name || "", email: lead.email, ...a, stage: out ? "not_qualified" : "applied" }, key = JSON.stringify(data);
       if (key !== sent) { sent = key; sendLead(data, "application"); }
+      analytics.once(out ? "s:not_qualified" : "s:applied", { now: true });
       if (out) { $("#booker-body").hidden = true; $(".booker__steps").hidden = true; $("#nq").hidden = false; }
     }, 1500);
   };
@@ -603,14 +657,17 @@ function initCalendar() {
 // GoHighLevel tells the page when the call is booked (["msgsndr-booking-complete", …]); then on to /booked.
 let bookingSent = false;
 addEventListener("message", e => {
+  if (/[?&]debug\b/.test(location.search)) console.log("[calendar message]", e.origin, e.data);   // add ?debug to the link to see them
   if ((PAGE !== "apply" && PAGE !== "apply2") || bookingSent || !CONFIG.ghlCalendarUrl) return;
   let fromGhl = false;
   try { fromGhl = /(^|\.)(leadconnectorhq\.com|msgsndr\.com)$/.test(new URL(e.origin).hostname) || e.origin === new URL(CONFIG.ghlCalendarUrl).origin; } catch {}
   const text = typeof e.data === "string" ? e.data : Array.isArray(e.data) ? String(e.data[0]) : "";
   if (!fromGhl || !/booking-complete/i.test(text)) return;
   bookingSent = true;
+  analytics.once("s:booked", { now: true });
   sendLead({ name: lead.name || "", email: lead.email || "", phone: lead.phone || "" }, "booked");
-  store.set("booking", { bookedAt: Date.now() });
+  // The call time, if the calendar's message has it, for "Add it to your calendar" on /booked.
+  store.set("booking", { bookedAt: Date.now(), ...((window.callCalendar && callCalendar.fromMessage(e.data)) || {}) });
   setTimeout(() => go("booked"), 1500);
 });
 
@@ -618,21 +675,23 @@ addEventListener("message", e => {
 /* /booked                                                          */
 /* ======================================================================= */
 if (PAGE === "booked") {
-  mountVideo($("#next-steps"), CONFIG.videos.nextSteps, { autoplay: true, title: "Next steps" });
+  mountVideo($("#next-steps"), CONFIG.videos.nextSteps, { autoplay: true, title: "Next steps", name: "nextSteps" });
   const grid = $("#faq-videos");
   grid.innerHTML = CONFIG.faqVideos.filter(([, url]) => url).map(([q], i) =>
     `<article class="vid-card"><h3>${esc(q)}</h3><div class="vslframe" data-faq="${i}"></div></article>`).join("");
   $$("[data-faq]", grid).forEach((box, i) => {
-    const [q, url] = CONFIG.faqVideos.filter(([, u]) => u)[i];
-    videoOnClick(box, url, q);
+    const [q, url, name] = CONFIG.faqVideos.filter(([, u]) => u)[i];
+    videoOnClick(box, url, q, name);
   });
-  // "Confirm In Gmail" opens their Gmail searched for the confirmation email (Spam and Promotions too);
-  // "Confirm In Outlook" opens Outlook on the web (Outlook.com for personal addresses, Microsoft 365 for work ones).
-  const email = (lead.email || "").trim().toLowerCase(), domain = email.split("@")[1] || "";
-  const words = `subject:"${CONFIG.confirmSubject}"`;
-  const query = CONFIG.confirmFrom ? `in:anywhere {from:${CONFIG.confirmFrom} ${words}}` : `in:anywhere ${words}`;
-  const gmail = "https://mail.google.com/mail/" + (email ? "?authuser=" + encodeURIComponent(email) : "u/0/") + "#search/" + encodeURIComponent(query).replace(/%20/g, "+");
-  $("#confirm-gmail").href = "https://accounts.google.com/ServiceLogin?" + new URLSearchParams({ service: "mail", passive: "true", ...(email ? { Email: email } : {}), continue: gmail });
-  const personal = !domain || /^(outlook|hotmail|live|msn|gmail|googlemail|yahoo|icloud|me|mac|aol|proton)\./.test(domain);
-  $("#confirm-outlook").href = personal ? "https://outlook.live.com/mail/0/" : "https://outlook.office.com/mail/";
+  // Step 3 of "Confirm your call": add-to-calendar links (assets/call-calendar.js). With the call time from the
+  // calendar they add the exact event; without it, Google and Outlook open a new event for them to set the time.
+  const booking = store.get("booking") || {};
+  if (window.callCalendar) {
+    const cal = callCalendar.links({ start: booking.start, end: booking.end, minutes: CONFIG.call.minutes, title: CONFIG.call.title, details: CONFIG.call.details, email: lead.email });
+    $("#addcal-google").href = cal.google;
+    $("#addcal-outlook").href = cal.outlook;
+    if (cal.apple) { $("#addcal-apple").href = cal.apple; $("#addcal-apple").hidden = false; }
+    if (!booking.start) $("#addcal-hint").textContent = "Tap an icon, then set the time from your confirmation email.";
+  }
+  ["google", "apple", "outlook"].forEach(k => $("#addcal-" + k)?.addEventListener("click", () => analytics.once("s:addcal_" + k, { now: true })));
 }

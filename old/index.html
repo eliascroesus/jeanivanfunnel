@@ -373,6 +373,20 @@ h1, h2, h3 { position: relative; font-family: var(--display); margin: 0; text-wr
 .vp__big svg { width: 42%; height: 42%; margin-left: 8%; }
 .vp.is-paused .vp__big { opacity: 1; }
 .vp:has(.vp__listen:not([hidden])) .vp__big { opacity: 0; }
+.vp.is-ended .vp__big { opacity: 0; }
+/* At the end: back to the start with our Replay button, so Vimeo's end screen ("More from …") never shows */
+.vp__replay {
+  position: absolute; inset: 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 12px;
+  border: 0; padding: 0; background: rgba(0, 0, 0, .62); color: #fff; cursor: pointer;
+  font-family: var(--display); font-size: 1rem; font-weight: 800; letter-spacing: .3px;
+}
+.vp__replay[hidden] { display: none; }
+.vp__replay i {
+  width: clamp(58px, 11vw, 88px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: var(--ink); box-shadow: 0 0 0 10px rgba(74, 222, 128, .18);
+}
+.vp__replay svg { width: 44%; height: 44%; }
+.vp.is-hard-end .vp__replay { background: #000; }
 .vp__bar {
   position: absolute; z-index: 2; left: 0; right: 0; bottom: 0;
   display: flex; align-items: center; gap: 4px;
@@ -616,29 +630,42 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 @media (max-width: 560px) { .tf__body { padding-left: 0; } }
 
 /* ---------- Booked ---------- */
-.confirm { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.confirm__label small { font: inherit; }
-/* Phones: "Confirm In" goes on a small line above the app name so both buttons fit side by side. */
-@media (max-width: 480px) {
-  .confirm__btn { justify-content: flex-start; padding: 11px 12px; gap: 9px; }
-  .confirm__label { display: grid; text-align: left; line-height: 1.15; font-size: 1.02rem; }
-  .confirm__label small { font-size: .7rem; font-weight: 600; color: #5f6368; }
+/* Step #2: three cards (email, messages, calendar), side by side on computers, stacked on phones. */
+.csteps { width: 100%; max-width: 1000px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.cstep {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 18px 22px; border-radius: 18px;
+  background: rgba(3, 10, 6, .55); border: 1px solid rgba(74, 222, 128, .35); text-align: center;
 }
-/* Twice the usual space between the buttons and the Step #2 title. */
-.confirm { margin-bottom: 28px; }
-/* Phones: extra room under the buttons (grows with the screen height), so the thank-you video and the
-   buttons stand out on the first screen before Step #2 starts. */
-@media (max-width: 560px) { .confirm { margin-bottom: max(56px, calc((100svh - 500px) * .6)); } }
-.confirm__btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 15px 12px;
-  border-radius: 14px; background: #fff; color: #1f1f1f; text-decoration: none;
-  font-family: var(--display); font-weight: 800; font-size: clamp(.82rem, 3.4vw, 1.08rem); white-space: nowrap;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .35);
-  transition: transform .15s ease, box-shadow .15s ease;
+.cstep__icon {
+  flex: none; width: 66px; height: 66px; margin-bottom: 4px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--gold-ink); background: linear-gradient(180deg, var(--gold), var(--gold-2));
+  box-shadow: 0 0 0 7px rgba(247, 201, 72, .14);
 }
-.confirm__btn:hover { transform: translateY(-1px); box-shadow: 0 14px 34px rgba(0, 0, 0, .45); }
-.confirm__btn svg { flex: none; width: 26px; height: 26px; }
+.cstep__icon svg { width: 31px; height: 31px; }
+.cstep h3 { font-family: var(--display); font-size: 1.08rem; font-weight: 800; line-height: 1.3; text-align: inherit; }
+.cstep h3 b { color: var(--accent); }
+.cstep p { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--muted); max-width: 32ch; }
+.cstep p b { color: var(--fg); }
+.addcal { display: flex; justify-content: center; gap: 8px; width: 100%; margin-top: 6px; }
+.addcal__btn {
+  flex: 1 1 0; max-width: 104px; display: grid; justify-items: center; gap: 5px; padding: 11px 6px 9px; border-radius: 12px;
+  background: #fff; color: #1f1f1f; text-decoration: none; font-family: var(--display); font-size: .78rem; font-weight: 800;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .35); transition: transform .15s ease, box-shadow .15s ease;
+}
+.addcal__btn:hover { transform: translateY(-1px); box-shadow: 0 14px 34px rgba(0, 0, 0, .45); }
+.addcal__btn svg { width: 30px; height: 30px; }
+.addcal__btn[hidden] { display: none; }
+.confirm-note { margin: -8px 0 0; font-size: .9rem; color: var(--muted); }
+.confirm-note b { color: var(--fg); }
+@media (max-width: 760px) {
+  .csteps { grid-template-columns: 1fr; gap: 12px; max-width: 480px; }
+  .cstep { display: grid; grid-template-columns: 54px 1fr; column-gap: 14px; row-gap: 4px; align-items: start; text-align: left; padding: 16px 16px 16px 14px; }
+  .cstep__icon { grid-row: span 2; width: 52px; height: 52px; margin: 2px 0 0; box-shadow: 0 0 0 5px rgba(247, 201, 72, .14); }
+  .cstep__icon svg { width: 25px; height: 25px; }
+  .cstep p { max-width: none; }
+  .addcal { grid-column: 1 / -1; margin-top: 10px; }
+  .addcal__btn { max-width: none; }
+}
 .faq { width: 100%; display: grid; gap: 14px; justify-items: center; }
 .faq h3 { font-size: clamp(1.2rem, 3vw, 1.7rem); font-weight: 800; }
 .faqs { width: 100%; display: grid; gap: 40px; }
@@ -698,7 +725,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 .nq__note { margin: 0; color: var(--muted); text-align: center; }
 
 .foot { max-width: 720px; text-align: center; color: var(--muted); font-size: .72rem; line-height: 1.6; }
-.foot nav { display: flex; justify-content: center; gap: 14px; margin-bottom: 8px; font-size: .78rem; }
+.foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-bottom: 8px; font-size: .78rem; }
+.foot p { margin: 0; }
+.foot p + p { margin-top: 8px; }
+.foot a { color: inherit; }
 
 /* ---------- Live join toast ---------- */
 .toast {
@@ -789,10 +819,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
     <button class="btn-gold" type="button" id="back-to-form" style="max-width:560px">Submit For Discord Access</button>
 
     <footer class="foot">
-      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
-      Trading involves substantial risk of loss and isn't suitable for everyone. Most people who trade
-      lose money. Nothing on this page is financial advice. The results shown are not typical and are not
-      a promise of what you will earn.
+      <nav><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Earnings &amp; Risk Disclaimer</a><a href="mailto:jean@fx.jeanfxtrading.com">Contact</a></nav>
+      <p><b>Earnings &amp; Risk Disclaimer:</b> The results shown are Jean's own and those of individual community members, and are <b>not typical</b>. <b>Trading involves substantial risk of loss and is not suitable for everyone. Most people who trade lose money, and most people who take prop firm evaluations don't pass them or get paid out.</b> We don't have data showing what a typical student earns, so don't expect results like these. Payouts shown are gross payouts, not profit, before costs like evaluation and reset fees, platform and data fees, and taxes. Past performance is not indicative of future results. We do not promise or guarantee that you will make any money; your results depend on your effort, skills, experience, the money you have available and market conditions. Our content is for education only and is not financial, investment or trading advice. <a href="/disclaimer">Read the full Earnings &amp; Risk Disclaimer</a>.</p>
+      <p>This site is not part of the Facebook, Instagram or YouTube websites, or of Meta Platforms, Inc. or Google LLC, and is not endorsed by them in any way. Facebook and Instagram are trademarks of Meta Platforms, Inc. YouTube is a trademark of Google LLC.</p>
+      <p>© 2026 Jean FX Trading. All rights reserved.</p>
     </footer>
   </div>
 </main>
@@ -899,8 +929,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
     </section>
 
     <footer class="foot">
-      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
-      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+      <nav><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Earnings &amp; Risk Disclaimer</a><a href="mailto:jean@fx.jeanfxtrading.com">Contact</a></nav>
+      <p><b>Earnings &amp; Risk Disclaimer:</b> The results shown are Jean's own and those of individual community members, and are <b>not typical</b>. <b>Trading involves substantial risk of loss and is not suitable for everyone. Most people who trade lose money, and most people who take prop firm evaluations don't pass them or get paid out.</b> We don't have data showing what a typical student earns, so don't expect results like these. Payouts shown are gross payouts, not profit, before costs like evaluation and reset fees, platform and data fees, and taxes. Past performance is not indicative of future results. We do not promise or guarantee that you will make any money; your results depend on your effort, skills, experience, the money you have available and market conditions. Our content is for education only and is not financial, investment or trading advice. <a href="/disclaimer">Read the full Earnings &amp; Risk Disclaimer</a>.</p>
+      <p>This site is not part of the Facebook, Instagram or YouTube websites, or of Meta Platforms, Inc. or Google LLC, and is not endorsed by them in any way. Facebook and Instagram are trademarks of Meta Platforms, Inc. YouTube is a trademark of Google LLC.</p>
+      <p>© 2026 Jean FX Trading. All rights reserved.</p>
     </footer>
   </div>
 </main>
@@ -951,8 +983,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
     </section>
 
     <footer class="foot">
-      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
-      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+      <nav><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Earnings &amp; Risk Disclaimer</a><a href="mailto:jean@fx.jeanfxtrading.com">Contact</a></nav>
+      <p><b>Earnings &amp; Risk Disclaimer:</b> The results shown are Jean's own and those of individual community members, and are <b>not typical</b>. <b>Trading involves substantial risk of loss and is not suitable for everyone. Most people who trade lose money, and most people who take prop firm evaluations don't pass them or get paid out.</b> We don't have data showing what a typical student earns, so don't expect results like these. Payouts shown are gross payouts, not profit, before costs like evaluation and reset fees, platform and data fees, and taxes. Past performance is not indicative of future results. We do not promise or guarantee that you will make any money; your results depend on your effort, skills, experience, the money you have available and market conditions. Our content is for education only and is not financial, investment or trading advice. <a href="/disclaimer">Read the full Earnings &amp; Risk Disclaimer</a>.</p>
+      <p>This site is not part of the Facebook, Instagram or YouTube websites, or of Meta Platforms, Inc. or Google LLC, and is not endorsed by them in any way. Facebook and Instagram are trademarks of Meta Platforms, Inc. YouTube is a trademark of Google LLC.</p>
+      <p>© 2026 Jean FX Trading. All rights reserved.</p>
     </footer>
   </div>
 </main>
@@ -978,8 +1012,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
     <button class="btn-gold" type="button" id="back-to-waitlist" style="max-width:560px">Join The Waiting List</button>
 
     <footer class="foot">
-      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
-      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+      <nav><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Earnings &amp; Risk Disclaimer</a><a href="mailto:jean@fx.jeanfxtrading.com">Contact</a></nav>
+      <p><b>Earnings &amp; Risk Disclaimer:</b> The results shown are Jean's own and those of individual community members, and are <b>not typical</b>. <b>Trading involves substantial risk of loss and is not suitable for everyone. Most people who trade lose money, and most people who take prop firm evaluations don't pass them or get paid out.</b> We don't have data showing what a typical student earns, so don't expect results like these. Payouts shown are gross payouts, not profit, before costs like evaluation and reset fees, platform and data fees, and taxes. Past performance is not indicative of future results. We do not promise or guarantee that you will make any money; your results depend on your effort, skills, experience, the money you have available and market conditions. Our content is for education only and is not financial, investment or trading advice. <a href="/disclaimer">Read the full Earnings &amp; Risk Disclaimer</a>.</p>
+      <p>This site is not part of the Facebook, Instagram or YouTube websites, or of Meta Platforms, Inc. or Google LLC, and is not endorsed by them in any way. Facebook and Instagram are trademarks of Meta Platforms, Inc. YouTube is a trademark of Google LLC.</p>
+      <p>© 2026 Jean FX Trading. All rights reserved.</p>
     </footer>
   </div>
 </main>
@@ -997,8 +1033,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
     <p class="nq__note" id="nq-check">Your Discord invite is in your email + SMS.</p>
 
     <footer class="foot">
-      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
-      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+      <nav><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Earnings &amp; Risk Disclaimer</a><a href="mailto:jean@fx.jeanfxtrading.com">Contact</a></nav>
+      <p><b>Earnings &amp; Risk Disclaimer:</b> The results shown are Jean's own and those of individual community members, and are <b>not typical</b>. <b>Trading involves substantial risk of loss and is not suitable for everyone. Most people who trade lose money, and most people who take prop firm evaluations don't pass them or get paid out.</b> We don't have data showing what a typical student earns, so don't expect results like these. Payouts shown are gross payouts, not profit, before costs like evaluation and reset fees, platform and data fees, and taxes. Past performance is not indicative of future results. We do not promise or guarantee that you will make any money; your results depend on your effort, skills, experience, the money you have available and market conditions. Our content is for education only and is not financial, investment or trading advice. <a href="/disclaimer">Read the full Earnings &amp; Risk Disclaimer</a>.</p>
+      <p>This site is not part of the Facebook, Instagram or YouTube websites, or of Meta Platforms, Inc. or Google LLC, and is not endorsed by them in any way. Facebook and Instagram are trademarks of Meta Platforms, Inc. YouTube is a trademark of Google LLC.</p>
+      <p>© 2026 Jean FX Trading. All rights reserved.</p>
     </footer>
   </div>
 </main>
@@ -1031,19 +1069,33 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       <div class="video__bar"><span></span></div>
     </div>
 
-    <!-- Opens their inbox at the confirmation email (spam included). The link is set in the script from their email. -->
-    <div class="confirm">
-      <a class="confirm__btn" id="confirm-gmail" href="https://mail.google.com/mail/u/0/#search/in%3Aanywhere+subject%3A%22Strategy+Call%22" target="_blank" rel="noopener">
-        <svg viewBox="52 42 88 66" aria-hidden="true"><path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6"/><path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15"/><path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2"/><path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92"/><path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2"/></svg>
-        <span class="confirm__label"><small>Confirm In </small>Gmail</span>
-      </a>
-      <a class="confirm__btn" id="confirm-outlook" href="https://outlook.live.com/mail/0/" target="_blank" rel="noopener">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="6" width="17" height="20" rx="2" fill="#28a8ea"/><path d="M12 12l8.5 5.5L29 12" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="3" y="9" width="14" height="14" rx="2" fill="#0364b8"/><ellipse cx="10" cy="16" rx="3.3" ry="4" fill="none" stroke="#fff" stroke-width="2"/></svg>
-        <span class="confirm__label"><small>Confirm In </small>Outlook</span>
-      </a>
+    <h2 class="step"><b>Step #2:</b> Confirm Your Call Now</h2>
+    <!-- Three things to do now. The calendar links are filled in by the script (with the call time when the calendar sent it). -->
+    <div class="csteps">
+      <article class="cstep">
+        <span class="cstep__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span>
+        <h3><b>Step 1:</b> Confirm Your Appointment</h3>
+        <p>Go to your email and reply <b>"Yes"</b> or <b>"Ready"</b> to confirm.</p>
+      </article>
+      <article class="cstep">
+        <span class="cstep__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4c4.97 0 9 3.13 9 7s-4.03 7-9 7c-1.1 0-2.15-.15-3.12-.43L4 19.5l1.4-3.6C3.9 14.6 3 12.9 3 11c0-3.87 4.03-7 9-7z"/><path d="M8 10h8M8 13h5"/></svg></span>
+        <h3><b>Step 2:</b> Check Your Messages</h3>
+        <p>Open iMessage or WhatsApp and reply to the text we'll send you shortly.</p>
+      </article>
+      <article class="cstep">
+        <span class="cstep__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15.5 2 2 4-4"/></svg></span>
+        <h3><b>Step 3:</b> Add It To Your Calendar</h3>
+        <p id="addcal-hint">Tap an icon below to add the call to your calendar.</p>
+        <div class="addcal">
+          <a class="addcal__btn" id="addcal-google" href="https://calendar.google.com/calendar/render?action=TEMPLATE" target="_blank" rel="noopener"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="23" rx="3.5" fill="#fff" stroke="#4285f4" stroke-width="2"/><path d="M4 8.5A3.5 3.5 0 0 1 7.5 5h17A3.5 3.5 0 0 1 28 8.5V11H4z" fill="#4285f4"/><path d="M10 15h3M10 19h3M10 23h3M15 15h3M15 19h3M15 23h3M20 15h3M20 19h3" stroke="#34a853" stroke-width="2"/><path d="M20 23h3" stroke="#ea4335" stroke-width="2"/><path d="M10 3v4M22 3v4" stroke="#1a73e8" stroke-width="2.2" stroke-linecap="round"/></svg><span>Google</span></a>
+          <a class="addcal__btn" id="addcal-apple" href="#" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="4" width="24" height="24" rx="5.5" fill="#fff" stroke="#d1d1d6" stroke-width="1.5"/><path d="M4 9.5A5.5 5.5 0 0 1 9.5 4h13A5.5 5.5 0 0 1 28 9.5V11H4z" fill="#ff3b30"/><path d="M9.5 15.5h2.5M14.75 15.5h2.5M20 15.5h2.5M9.5 19.5h2.5M14.75 19.5h2.5M20 19.5h2.5M9.5 23.5h2.5M14.75 23.5h2.5" stroke="#3a3a3c" stroke-width="2.2"/><path d="M20 23.5h2.5" stroke="#ff3b30" stroke-width="2.2"/></svg><span>Apple</span></a>
+          <a class="addcal__btn" id="addcal-outlook" href="https://outlook.live.com/calendar/0/deeplink/compose" target="_blank" rel="noopener"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="6" width="17" height="20" rx="2" fill="#28a8ea"/><path d="M15 12h11M15 16h11M15 20h7" stroke="#fff" stroke-width="1.6"/><rect x="3" y="9" width="14" height="14" rx="2" fill="#0364b8"/><ellipse cx="10" cy="16" rx="3.3" ry="4" fill="none" stroke="#fff" stroke-width="2"/></svg><span>Outlook</span></a>
+        </div>
+      </article>
     </div>
+    <p class="confirm-note">Can't find the email? <b>Check Spam and Promotions.</b></p>
 
-    <h2 class="step"><b>Step #2:</b> Go Through Our FAQs</h2>
+    <h2 class="step"><b>Step #3:</b> Go Through Our FAQs</h2>
 
     <div class="faqs">
       <section class="faq">
@@ -1098,7 +1150,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
       </section>
     </div>
 
-    <h2 class="step"><b>Step #3:</b> See The Results From Me And The JFX Community</h2>
+    <h2 class="step"><b>Step #4:</b> See The Results From Me And The JFX Community</h2>
 
     <!-- Jean Ivan's own results mixed with members' wins (listed in PROOF in the script below) -->
     <section class="receipts" aria-label="Results">
@@ -1106,8 +1158,10 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
     </section>
 
     <footer class="foot">
-      <nav><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a><a href="#disclaimer">Disclaimer</a></nav>
-      Trading involves substantial risk of loss. Most people who trade lose money. Results are not typical and this is not financial advice.
+      <nav><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Earnings &amp; Risk Disclaimer</a><a href="mailto:jean@fx.jeanfxtrading.com">Contact</a></nav>
+      <p><b>Earnings &amp; Risk Disclaimer:</b> The results shown are Jean's own and those of individual community members, and are <b>not typical</b>. <b>Trading involves substantial risk of loss and is not suitable for everyone. Most people who trade lose money, and most people who take prop firm evaluations don't pass them or get paid out.</b> We don't have data showing what a typical student earns, so don't expect results like these. Payouts shown are gross payouts, not profit, before costs like evaluation and reset fees, platform and data fees, and taxes. Past performance is not indicative of future results. We do not promise or guarantee that you will make any money; your results depend on your effort, skills, experience, the money you have available and market conditions. Our content is for education only and is not financial, investment or trading advice. <a href="/disclaimer">Read the full Earnings &amp; Risk Disclaimer</a>.</p>
+      <p>This site is not part of the Facebook, Instagram or YouTube websites, or of Meta Platforms, Inc. or Google LLC, and is not endorsed by them in any way. Facebook and Instagram are trademarks of Meta Platforms, Inc. YouTube is a trademark of Google LLC.</p>
+      <p>© 2026 Jean FX Trading. All rights reserved.</p>
     </footer>
   </div>
 </main>
@@ -1130,6 +1184,7 @@ textarea.tf__input { resize: none; overflow: hidden; min-height: calc(1.35em + 1
 <!-- Vimeo's player library (MIT), kept in the repo so the videos never depend on another site. -->
 <script src="/assets/vimeo-player.min.js"></script>
 <script src="/assets/lead-form.js"></script>
+<script src="/assets/call-calendar.js"></script>
 <script>
 /* =======================================================================
    EDIT ME — everything you'd normally swap lives here.
@@ -1168,11 +1223,10 @@ const CONFIG = {
   // Discord invite link for the button on /not-qualified. Leave "" to tell them to check their email + SMS.
   discordUrl: "https://discord.gg/5qGhKE6A5j",
 
-  // How the "Confirm In Gmail" button on /booked finds the booking confirmation email (spam and
-  // promotions included): anything from this address, OR anything with these words in the subject.
-  // Keep the words in the subject of the calendar's confirmation email. Leave confirmFrom "" to use the subject only.
-  confirmFrom: "",
-  confirmSubject: "Strategy Call",
+  // "Add it to your calendar" on /booked. The time comes from the calendar when it sends it; the length is a fallback.
+  // (The Apple Calendar file's title and text are set in api/ics.js.)
+  call: { title: "Strategy Call With Jean", minutes: 30,
+    details: "Your strategy call with Jean (Jean FX Trading). The link to join is in your confirmation email and texts." },
 
   // GoHighLevel calendar shown on page 2: the calendar's booking link, e.g.
   // "https://api.leadconnectorhq.com/widget/booking/AbC123…" (Calendars → the calendar's ⋮ → Share → Permanent link).
@@ -1333,6 +1387,7 @@ function embedVideos(page) {
 }
 
 const ICONS = {
+  replay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 3.5v5h5"/></svg>',
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>',
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
   sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5c1.5 1.5 1.5 5.5 0 7M19.5 5.5c3.2 3.2 3.2 9.8 0 13"/></svg>',
@@ -1370,6 +1425,7 @@ function videoControls(box, autoplay) {
       <button class="vp__btn vp__mute" type="button" aria-label="Sound on or off">${ICONS.sound}${ICONS.muted}</button>
       <button class="vp__btn vp__full" type="button" aria-label="Full screen">${ICONS.full}</button>
     </div>
+    <button class="vp__replay" type="button" hidden><i>${ICONS.replay}</i><span>Replay</span></button>
     ${autoplay ? `<button class="autoplay vp__listen" type="button"><strong>Your video has already started</strong>${ICONS.listen}<span>Click to listen</span></button>` : ""}`);
   box.classList.add("vp", "is-paused");
   box.classList.toggle("is-muted", autoplay);
@@ -1397,14 +1453,36 @@ function videoControls(box, autoplay) {
     if (listen && !listen.hidden) return unmute();
     if (paused) play(); else player.pause().catch(() => {});
   };
+  // The end: Vimeo would show its own end screen ("More from …" with other videos). So the video stops just before
+  // its last half second, goes back to the start and shows our Replay button instead. If Vimeo ever gets to the
+  // real end first, the Replay layer covers its end screen completely.
+  const replay = $(".vp__replay", box);
+  let ended = false;
+  const finish = hard => {
+    if (ended) return;
+    ended = true; paused = true;
+    box.classList.add("is-paused", "is-ended");
+    box.classList.toggle("is-hard-end", !!hard);
+    replay.hidden = false;
+    if (listen) listen.hidden = true;
+    fill.style.width = "0%";
+    player.pause().catch(() => {});
+    player.setCurrentTime(0).catch(() => {});
+  };
+  replay.addEventListener("click", () => { setMuted(false); player.setCurrentTime(0).catch(() => {}); play(); });
 
   player.on("play", () => {
     paused = false; box.classList.remove("is-paused");
+    if (ended) { ended = false; replay.hidden = true; box.classList.remove("is-ended", "is-hard-end"); }
     players.forEach(p => { if (p !== player) p.pause().catch(() => {}); });   // one video at a time
   });
   player.on("pause", () => { paused = true; box.classList.add("is-paused"); });
-  player.on("ended", () => { paused = true; box.classList.add("is-paused"); });
-  player.on("timeupdate", d => { duration = d.duration || duration; fill.style.width = (d.percent || 0) * 100 + "%"; });
+  player.on("ended", () => finish(true));
+  player.on("timeupdate", d => {
+    duration = d.duration || duration;
+    if (!ended && !paused && d.duration > 2 && d.seconds >= d.duration - 0.6) return finish(false);
+    if (!ended) fill.style.width = (d.percent || 0) * 100 + "%";
+  });
 
   const hit = $(".vp__hit", box);
   hit.addEventListener("pointerdown", e => { touch = e.pointerType === "touch"; });
@@ -1444,25 +1522,16 @@ function fitVideoShape(box, player) {
   }).catch(() => {});
 }
 
-// "Confirm In Gmail" / "Confirm In Outlook" open their email on the web (phones too), so it works the same
-// everywhere. Gmail searches every folder (in:anywhere covers Spam and Promotions) in the account they
-// booked with (authuser picks it when several are signed in). Outlook on the web can't be opened on a
-// search, so it opens their inbox: Outlook.com for personal addresses, Microsoft 365 for work ones.
-function setupConfirmButton() {
-  const email = (lead.email || "").trim().toLowerCase(), domain = email.split("@")[1] || "";
-  // { } is Gmail's OR: from our address, or the confirmation's subject words (whoever sent it).
-  const words = `subject:"${CONFIG.confirmSubject}"`;
-  const query = CONFIG.confirmFrom ? `in:anywhere {from:${CONFIG.confirmFrom} ${words}}` : `in:anywhere ${words}`;
-  const search = encodeURIComponent(query).replace(/%20/g, "+");
-  const gmail = "https://mail.google.com/mail/" + (email ? "?authuser=" + encodeURIComponent(email) : "u/0/") + "#search/" + search;
-  // Through Google's sign-in, because a plain link loses the "#search/…" part when someone has to log in
-  // first (common on phones). Google keeps it inside "continue" and sends them on after sign-in; anyone
-  // already signed in goes straight through (passive=true). Email picks the account to sign in with.
-  $("#confirm-gmail").href = "https://accounts.google.com/ServiceLogin?" + new URLSearchParams({
-    service: "mail", passive: "true", ...(email ? { Email: email } : {}), continue: gmail,
-  });
-  const personal = !domain || /^(outlook|hotmail|live|msn)\./.test(domain) || /^(gmail|googlemail|yahoo|icloud|me|mac|aol|proton)\./.test(domain);
-  $("#confirm-outlook").href = personal ? "https://outlook.live.com/mail/0/" : "https://outlook.office.com/mail/";
+// Step #2's "Add it to your calendar" links (assets/call-calendar.js). With the call time from the calendar they add
+// the exact event; without it, Google and Outlook open a new event for them to set the time.
+function setupAddToCalendar() {
+  if (!window.callCalendar) return;
+  const booking = store.get("booking") || {};
+  const cal = callCalendar.links({ start: booking.start, end: booking.end, minutes: CONFIG.call.minutes, title: CONFIG.call.title, details: CONFIG.call.details, email: lead.email });
+  $("#addcal-google").href = cal.google;
+  $("#addcal-outlook").href = cal.outlook;
+  if (cal.apple) { $("#addcal-apple").href = cal.apple; $("#addcal-apple").hidden = false; }
+  if (!booking.start) $("#addcal-hint").textContent = "Tap an icon, then set the time from your confirmation email.";
 }
 
 // While they're on page 1, load the VSL player and the GoHighLevel calendar off-screen (after 10 s, or as soon
@@ -1543,7 +1612,7 @@ function route() {
   toast.active(VIEW === "optin");
   if (VIEW === "optin") warmUpNextPage();
   if (VIEW === "apply" || VIEW === "apply2") warmUpNextPage([CONFIG.videos.nextSteps], false);
-  if (VIEW === "booked") setupConfirmButton();
+  if (VIEW === "booked") setupAddToCalendar();
 }
 
 /* ---------- One-line headings ---------- */
@@ -2199,7 +2268,8 @@ window.addEventListener("message", e => {
   if (bookingSent) return;
   bookingSent = true;
   const answers = VIEW === "apply2" ? typeformData() : applicationData();
-  store.set("booking", { ...answers, bookedAt: Date.now() });
+  // The call time, if the calendar's message has it, for "Add it to your calendar" on /booked.
+  store.set("booking", { ...answers, bookedAt: Date.now(), ...((!calendly && window.callCalendar && callCalendar.fromMessage(e.data)) || {}) });
   sendLead(answers, "booked");
   setTimeout(() => go("booked"), 1500);
 });
