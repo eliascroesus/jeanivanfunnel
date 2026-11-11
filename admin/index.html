@@ -478,6 +478,7 @@ dialog h2 { margin-bottom: 12px; }
             <option value="/discord">Opt-in page (/discord)</option>
             <option value="/apply">Application V1 (/apply, one question at a time)</option>
             <option value="/apply-2">Application V2 (/apply-2, form + calendar)</option>
+            <option value="/booking">Booking page (/booking, just the calendar)</option>
             <option value="custom">Another link…</option>
           </select>
         </label>
@@ -541,7 +542,7 @@ const QUESTIONS = {
   a1: { title: "V1 · /apply (one question at a time)", page: "apply", ver: "V1", list: [["situation", "1. Situation"], ["goal", "2. Biggest goal"], ["obstacles", "3. Obstacles (written)"], ["instagram", "4. Instagram"], ["investment", "5. Investment"]] },
   a2: { title: "V2 · /apply-2 (form beside the calendar)", page: "apply2", ver: "V2", list: [["experience", "Experience"], ["motivation", "Main goal"], ["investment", "Money to invest"], ["reason", "Biggest issue"], ["ready", "Ready to fix it?"], ["instagram", "Instagram"]] },
 };
-const PAGES = [["discord", "/discord", "Opt-in"], ["apply", "/apply", "Page 2, V1"], ["apply2", "/apply-2", "Page 2, V2"], ["booked", "/booked", "After booking"]];
+const PAGES = [["discord", "/discord", "Opt-in"], ["apply", "/apply", "Page 2, V1"], ["apply2", "/apply-2", "Page 2, V2"], ["booking", "/booking", "Booking page (DMs)"], ["booked", "/booked", "After booking"]];
 const BUTTONS = [["s:optin_error", "Saw an error on the opt-in form"], ["s:nq_discord", "Didn't qualify: Join The Free Discord"],
   ["s:addcal_google", "/booked: Add to Google Calendar"], ["s:addcal_apple", "/booked: Add to Apple Calendar"], ["s:addcal_outlook", "/booked: Add to Outlook"]];
 const DEVICES = { iphone: "iPhone", android: "Android", desktop: "Computer", tablet: "Tablet / iPad", mobile: "Other phone" };
@@ -549,6 +550,7 @@ const APPS = { instagram: "Instagram app", tiktok: "TikTok app", facebook: "Face
   google: "Google app", safari: "Safari", chrome: "Chrome", firefox: "Firefox", edge: "Edge", samsung: "Samsung Internet", other: "Other" };
 const SUGGEST = [
   ["instagram", "Instagram bio", "ig-bio"], ["instagram", "Instagram story", "ig-story"], ["instagram", "Instagram DMs", "ig-dm"],
+  ["instagram", "DM setters: booking page", "dm-booking", "/booking"],
   ["instagram", "Instagram reel caption / comments", "ig-reel"], ["youtube", "YouTube channel bio", "yt-bio"], ["youtube", "YouTube video description", "yt-desc"],
   ["tiktok", "TikTok bio", "tt-bio"], ["discord", "Discord announcement", "discord"], ["email", "Email newsletter", "email"],
 ];
@@ -1506,9 +1508,10 @@ $("#login-form").addEventListener("submit", async e => {
 
 // Links form
 const linkForm = $("#link-form");
-SUGGEST.forEach(([channel, name, slug]) => $("#suggest").append(h("button", { type: "button", onclick: () => {
+SUGGEST.forEach(([channel, name, slug, dest]) => $("#suggest").append(h("button", { type: "button", onclick: () => {
   resetLinkForm();
   linkForm.channel.value = channel; linkForm.name.value = name; linkForm.slug.value = slug;
+  if (dest) linkForm.dest.value = dest;
   $("#example-link").textContent = "/go/" + slug;
   linkForm.name.focus();
 } }, "+ " + name)));

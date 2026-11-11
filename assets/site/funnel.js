@@ -6,7 +6,7 @@
 const CONFIG = {
   leadSheetUrl: "https://script.google.com/macros/s/AKfycbz5Kit_1dN9WRHCtjC8Idq49u2c5Rr9KMBf1MVEqUjxsxbIX2DWplN-WWwAhCSNyPob/exec",
   // The sheet's Version column: which page 2 the lead got, so the two can be compared.
-  versions: { apply: "Redesign", apply2: "Redesign 2" },
+  versions: { apply: "Redesign", apply2: "Redesign 2", booking: "DM Booking" },   // the sheet's Version column
   // A/B test: share of new opt-ins sent to /apply (one question at a time). The rest go to /apply-2 (the form
   // beside the calendar). Each visitor keeps the one they got. ?v=1 or ?v=2 in a link picks one; ?v=reset forgets it.
   abSplitApply: 0.5,
@@ -111,6 +111,7 @@ function abPage() {
 const TRACK_VER = { apply: "V1", apply2: "V2" };
 function trackVersion() {
   if (TRACK_VER[PAGE]) return TRACK_VER[PAGE];
+  if (PAGE === "booking") return "";   // not part of the A/B test
   if (!lead.email) return "";
   try { return TRACK_VER[localStorage.getItem("jeanivan_ab_page")] || ""; } catch { return ""; }
 }
@@ -582,8 +583,10 @@ function calendarSoon(form) {
 }
 function initCalendar() {
   const frame = $("#cal-frame");
-  if (!frame || !CONFIG.ghlCalendarUrl || !lead.email || frame.dataset.for === lead.email) return;
-  frame.dataset.for = lead.email;
+  // Loaded once per person (again only if their email changes). /booking loads it for anyone, filled in if we know them.
+  const who = lead.email || "";
+  if (!frame || !CONFIG.ghlCalendarUrl || (frame.querySelector("iframe") && frame.dataset.for === who)) return;
+  frame.dataset.for = who;
   const [first, ...rest] = (lead.name || "").trim().split(/\s+/);
   const u = new URL(CONFIG.ghlCalendarUrl);
   // The calendar fills its booking form from these. Its form needs a last name, so a one-word name gets "-".
@@ -591,18 +594,29 @@ function initCalendar() {
     .forEach(([k, v]) => { if (v) u.searchParams.set(k, v); });
   frame.innerHTML = `<iframe src="${esc(u.href)}" title="Book your call" allow="payment" scrolling="yes"></iframe>`;
 }
+/* ======================================================================= */
+/* /booking: just the calendar (the link setters send in DMs)             */
+/* ======================================================================= */
+if (PAGE === "booking") initCalendar();
+
 // GoHighLevel tells the page when the call is booked (["msgsndr-booking-complete", …]); then on to /booked.
 let bookingSent = false;
 addEventListener("message", e => {
   if (/[?&]debug\b/.test(location.search)) console.log("[calendar message]", e.origin, e.data);   // add ?debug to the link to see them
-  if ((PAGE !== "apply" && PAGE !== "apply2") || bookingSent || !CONFIG.ghlCalendarUrl) return;
+  if (!["apply", "apply2", "booking"].includes(PAGE) || bookingSent || !CONFIG.ghlCalendarUrl) return;
   let fromGhl = false;
   try { fromGhl = /(^|\.)(leadconnectorhq\.com|msgsndr\.com)$/.test(new URL(e.origin).hostname) || e.origin === new URL(CONFIG.ghlCalendarUrl).origin; } catch {}
   const text = typeof e.data === "string" ? e.data : Array.isArray(e.data) ? String(e.data[0]) : "";
   if (!fromGhl || !/booking-complete/i.test(text)) return;
   bookingSent = true;
   analytics.once("s:booked", { now: true });
-  sendLead({ name: lead.name || "", email: lead.email || "", phone: lead.phone || "" }, "booked");
+  // On /booking we may not know them yet: take their details from the calendar's message when it has them.
+  if (!lead.email && window.callCalendar) {
+    const c = callCalendar.contactFromMessage(e.data);
+    if (c && c.email) { lead = { ...lead, ...c }; store.set("lead", lead); }
+  }
+  // The sheet matches people by email, so without one there's nothing to fill in (GoHighLevel has the booking anyway).
+  if (lead.email) sendLead({ name: lead.name || "", email: lead.email, phone: lead.phone || "" }, "booked");
   // The call time, if the calendar's message has it, for "Add it to your calendar" on /booked.
   store.set("booking", { bookedAt: Date.now(), ...((window.callCalendar && callCalendar.fromMessage(e.data)) || {}) });
   setTimeout(() => go("booked"), 1500);

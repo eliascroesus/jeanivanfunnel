@@ -1,4 +1,5 @@
-/* "Add it to your calendar" on /booked, plus reading the call time from GoHighLevel's calendar.
+/* "Add it to your calendar" on /booked, plus reading the call time (and on /booking, the person's details) from
+   GoHighLevel's calendar.
    Plain script, used by assets/site/funnel.js through window.callCalendar:
      callCalendar.fromMessage(data) → { start, end } (ISO times) when the calendar's "booking complete" message
                                       includes the call time, else null. GoHighLevel doesn't document what that
@@ -61,5 +62,27 @@
       apple: start ? "/api/ics?" + query({ start: start.toISOString(), end: end.toISOString() }) : null,
     };
   }
-  window.callCalendar = { fromMessage: fromMessage, links: links };
+  // Name, email and phone from the same message, when it has them (for /booking, where we don't know the person yet).
+  function contactFromMessage(data) {
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch (e) { return null; } }
+    var out = {}, first = "", last = "", seen = [];
+    (function walk(o, depth) {
+      if (!o || typeof o !== "object" || depth > 5 || seen.indexOf(o) >= 0) return;
+      seen.push(o);
+      Object.keys(o).forEach(function (k) {
+        var v = o[k];
+        if (v && typeof v === "object") return walk(v, depth + 1);
+        if (typeof v !== "string" || !v.trim()) return;
+        v = v.trim();
+        if (!out.email && /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) out.email = v.toLowerCase();
+        else if (!out.phone && /phone/i.test(k) && /^\+?[\d\s().-]{7,}$/.test(v)) out.phone = v.replace(/[^\d+]/g, "");
+        else if (!out.name && /^(full_?)?name$/i.test(k) && v.length < 80) out.name = v;
+        else if (!first && /^first_?name$/i.test(k)) first = v;
+        else if (!last && /^last_?name$/i.test(k)) last = v;
+      });
+    })(Array.isArray(data) ? data.slice(1) : data, 0);
+    if (!out.name && first) out.name = (first + " " + (last === "-" ? "" : last)).trim();
+    return out.email ? out : null;
+  }
+  window.callCalendar = { fromMessage: fromMessage, links: links, contactFromMessage: contactFromMessage };
 })();

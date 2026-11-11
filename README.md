@@ -1,7 +1,8 @@
 # Jean Ivan funnel
 
 Trading funnel for jeanfxtrading.com. The site has only these pages: the funnel (`/discord`, `/apply`, `/apply-2`,
-`/booked`), the legal pages (`/privacy`, `/terms`, `/disclaimer`) and the `/admin` dashboard.
+`/booked`), the booking page for DMs (`/booking`), the legal pages (`/privacy`, `/terms`, `/disclaimer`) and the
+`/admin` dashboard.
 
 **The funnel** (black and gold). Each page is the `index.html` in its own folder. They share
 `assets/site/style.css` (the design) and `assets/site/funnel.js` (the behaviour, with its settings in `CONFIG` at the top):
@@ -21,6 +22,12 @@ Trading funnel for jeanfxtrading.com. The site has only these pages: the funnel 
 3. **Booked** (`/booked`): "Your call is NOT confirmed yet", Step #1 the thank-you video, Step #2 "Confirm Your Call
    Now" (three cards: reply "Yes" to the email, reply to the text on iMessage or WhatsApp, add it to your calendar
    with Google / Apple / Outlook buttons), Step #3 the FAQ videos (one per row), then Jean's story.
+
+**Booking page** (`/booking`): just the headline "Book Your Call With Jean" and the GoHighLevel calendar, for the link
+setters send in DMs (no opt-in or application first). It's filled in for anyone who opted in before on the same phone.
+A booking goes on to `/booked` like the rest of the funnel, and to the sheet with **DM Booking** in the Version column
+when the calendar's booking message includes their email (GoHighLevel has the booking either way). For tracking, make a
+link in **/admin → Tracked links → "DM setters: booking page"**: it goes to `/booking?ref=dm-booking`.
 
 Every page ends with the same footer as the Ricky funnel: links to the **Privacy Policy** (`/privacy`), **Terms of
 Service** (`/terms`) and **Earnings & Risk Disclaimer** (`/disclaimer`), a Contact link (jean@fx.jeanfxtrading.com),
@@ -97,7 +104,8 @@ then filled into that person's row, matched by email:
 | Every step | Source Link: the `/go/…` tracked link (or app/site) they came from, as on `/admin` |
 
 The "Version" column says which pages each lead went through: **Redesign** / **Redesign 2** (the main `/apply` /
-`/apply-2`); older rows show **V1**, **V2** or **Waitlist** from pages that have since been removed. Setup steps
+`/apply-2`) or **DM Booking** (`/booking`); older rows show **V1**, **V2** or **Waitlist** from pages that have since
+been removed. Setup steps
 are at the top of `lead-capture.gs`. The Web app URL is `leadSheetUrl` in `CONFIG` in `assets/site/funnel.js`.
 
 ## Leads to GoHighLevel
