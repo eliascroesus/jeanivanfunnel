@@ -23,7 +23,7 @@ Trading funnel for jeanfxtrading.com. The site has only these pages: the funnel 
    Now" (three cards: reply "Yes" to the email, reply to the text on iMessage or WhatsApp, add it to your calendar
    with Google / Apple / Outlook buttons), Step #3 the FAQ videos (one per row), then Jean's story.
 
-**Booking page** (`/booking`): just the headline "Book Your Call With Jean" and the GoHighLevel calendar, for the link
+**Booking page** (`/booking`): just the headline "Book Your Free Call" and the GoHighLevel calendar, for the link
 setters send in DMs (no opt-in or application first). It's filled in for anyone who opted in before on the same phone.
 A booking goes on to `/booked` like the rest of the funnel, and to the sheet with **DM Booking** in the Version column
 when the calendar's booking message includes their email (GoHighLevel has the booking either way). For tracking, make a
