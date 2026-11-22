@@ -16,6 +16,7 @@
     { "source": "/", "destination": "/discord", "permanent": false },
     { "source": "/waitlist", "destination": "/discord", "permanent": false },
     { "source": "/not-qualified", "destination": "/discord", "permanent": false },
+    { "source": "/apply-2", "destination": "/apply", "permanent": false },
     { "source": "/old", "destination": "/discord", "permanent": false },
     { "source": "/old/(.*)", "destination": "/discord", "permanent": false },
     { "source": "/redesign/(.*)", "destination": "/$1", "permanent": false }

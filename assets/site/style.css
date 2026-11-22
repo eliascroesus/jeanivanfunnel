@@ -422,3 +422,6 @@ footer .foot-nav a { text-decoration: none; }
 footer .foot-nav a:hover { color: #fff; text-decoration: underline; }
 .has-sticky footer { padding-bottom: 110px; }
 
+
+/* Phones: smaller application questions */
+@media (max-width: 560px) { .q__title { font-size: 17px; } .q__opt, .q .input, .q__help { font-size: 14px; } }

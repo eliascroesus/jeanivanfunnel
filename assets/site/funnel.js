@@ -24,7 +24,8 @@ const CONFIG = {
     ["Can I Do This With A Full-Time Job?", "https://player.vimeo.com/video/1243211356", "faqTime"],
     ["How Much Money Do I Need To Start Trading?", "https://player.vimeo.com/video/1243211358", "faqMoney"],
   ],
-  ghlCalendarUrl: "https://api.leadconnectorhq.com/widget/booking/fOpQ0g6PeGi0AV9lhKP8",
+  // The booking calendar (NeetoCal inline embed, from NeetoCal → the meeting → Embed).
+  neetoCal: { id: "6e1977d5-4cb1-403d-b188-0fb419c56572", organization: "uncapped", slug: "jean-strategy-call" },
   discordUrl: "https://discord.gg/5qGhKE6A5j",
   // Investment answers that don't qualify for a call: they see the free Discord instead of the calendar.
   disqualify: ["Under $500", "I want to, but don't have the resources to fund my goals"],
@@ -34,23 +35,24 @@ const CONFIG = {
     details: "Your strategy call with Jean (Jean FX Trading). The link to join is in your confirmation email and texts." },
 };
 
-// The application on /apply, one question at a time (same questions as the old /apply-2).
-// Visitors who didn't come through /discord are asked for name, email and phone first.
-const CONTACT_QUESTIONS = [
-  { key: "name", type: "text", title: "First, what's your full name?", placeholder: "Full name", autocomplete: "name" },
-  { key: "email", type: "email", title: "What's your email?", placeholder: "name@example.com", autocomplete: "email" },
-  { key: "phone", type: "phone", title: "And your phone number?", placeholder: "Phone number" },
-];
+// The application on /apply, one question at a time: the questions first, then name, email, Instagram and phone
+// (people who opted in on /discord aren't asked for name, email or phone again).
 const QUESTIONS = [
   { key: "situation", type: "choice", title: "Which of these best describes your situation right now?",
     options: ["I'm already trading and want to become consistently profitable", "I've been trying to trade and I'm stuck", "I'm completely new to trading"] },
-  { key: "goal", type: "long", title: "What's your biggest goal for the next 6‑12 months? (life, situation, income)", placeholder: "Type your answer here..." },
+  { key: "goal", type: "choice", title: "Where do you want to be with your trading in the next 6-12 months?",
+    options: ["💼 Trading full time and out of my 9–5", "💰 Funded and getting consistent payouts", "📈 Consistently profitable every month", "🌍 Free to trade from anywhere in the world", "👨‍👩‍👧 Providing more for my family"] },
   { key: "obstacles", type: "long", title: "What challenges or obstacles do you feel are holding you back from reaching that goal?", placeholder: "Type your answer here..." },
-  { key: "instagram", type: "text", title: "What's your Instagram?", placeholder: "@handle" },
   { key: "investment", type: "choice",
-    title: "In a world where this was a PERFECT fit and we knew without a doubt we could help you hit the goals you just mentioned, how much are you willing to invest into your trading and getting 1\u2011on\u20111 coaching from Jean Ivan?",
+    title: "In a world where this was a PERFECT fit and we knew without a doubt we could help you hit the goals you just mentioned, how much are you willing to invest into your trading? (the software, prop firm challenges and coaching)",
     help: "Full transparency is recommended. We'll help you either way.",
-    options: ["$1,000 – $3,000", "$3,000 – $5,000", "I have a 650+ credit score", "I want to, but don't have the resources to fund my goals"] },
+    options: ["$400 – $1,000", "$1,000 – $3,000", "$3,000 – $5,000", "I have a 650+ credit score", "I want to, but don't have the resources to fund my goals"] },
+];
+const CONTACT_QUESTIONS = [
+  { key: "name", type: "text", title: "What's your full name?", placeholder: "Full name", autocomplete: "name", contact: true },
+  { key: "email", type: "email", title: "What's your email?", placeholder: "name@example.com", autocomplete: "email", contact: true },
+  { key: "instagram", type: "text", title: "What's your Instagram handle?", placeholder: "@handle" },
+  { key: "phone", type: "phone", title: "And lastly, your phone number?", placeholder: "Phone number", contact: true },
 ];
 
 /* ======================================================================= */
@@ -356,7 +358,7 @@ if (PAGE === "discord") {
     lead = { name, email, phone: p.e164, phoneNational: form.phone.value.trim(), country: p.country };
     saveDraft();
     store.set("lead", lead);
-    const next = abPage();
+    const next = "apply";   // no A/B test any more: everyone goes to /apply
     analytics.set({ ver: TRACK_VER[next] });
     analytics.once("s:optin", { now: true });
     sendLead({ name, email, phone: p.e164, country: p.country, version: CONFIG.versions[next] });
@@ -366,7 +368,7 @@ if (PAGE === "discord") {
   form.addEventListener("focusin", () => analytics.once("s:optin_start"));
   // Load the next page's video player and calendar in hidden frames once they start the form, so page 2 opens fast.
   form.addEventListener("focusin", () => setTimeout(() => {
-    [vimeoEmbedUrl(CONFIG.videos.vsl, true, false).href, CONFIG.ghlCalendarUrl].filter(Boolean).forEach(src => {
+    [vimeoEmbedUrl(CONFIG.videos.vsl, true, false).href].filter(Boolean).forEach(src => {
       const f = document.createElement("iframe");
       f.src = src; f.title = ""; f.tabIndex = -1; f.setAttribute("aria-hidden", "true");
       f.style.cssText = "position:fixed;left:-10000px;top:0;width:640px;height:360px;opacity:0;pointer-events:none;border:0";
@@ -389,12 +391,12 @@ if (PAGE === "apply" || PAGE === "apply2") {
 if (PAGE === "apply") {
   const quiz = $("#quiz"), form = $("#quiz-form"), bar = $("#quiz-bar"), back = $("#quiz-back");
   const knowThem = !!(lead.name && lead.email && lead.phone);
-  const steps = knowThem ? QUESTIONS : [...CONTACT_QUESTIONS, ...QUESTIONS];
+  const steps = [...QUESTIONS, ...CONTACT_QUESTIONS.filter(q => !(knowThem && q.contact))];
   const answers = {};
   let index = 0, sent = "", advanceTimer = null, phone = null;
 
   form.innerHTML = steps.map((q, i) => {
-    const id = "q-" + q.key, count = `<div class="q__count">Question ${i + 1} of ${steps.length}</div>`;
+    const id = "q-" + q.key, count = "";
     const ok = `<div class="q__actions"><button type="button" class="q__ok">OK <span aria-hidden="true">→</span></button><span class="q__hint">press Enter ↵</span></div>`;
     const field = q.type === "choice"
       ? `<div class="q__opts" role="radiogroup" aria-labelledby="${id}-t">${q.options.map((o, k) =>
@@ -425,7 +427,16 @@ if (PAGE === "apply") {
     const q = steps[index], el = stepEls[index], err = $(".q__err", el);
     if (q.key === "name") form.elements.name.value = tidyName(form.elements.name.value);
     let value = valueOf(q), problem = "";
-    if (q.type === "phone") { const p = phone.check(true); problem = phone.problem(p); if (!problem) { value = p.e164; lead.country = p.country; lead.phoneNational = form.elements.phone.value.trim(); } }
+    if (q.type === "phone") {
+      // Any country: a number with its own +code is taken as typed; otherwise the picked country's code is added.
+      const raw = form.elements.phone.value.trim(), digits = raw.replace(/\D/g, "");
+      const p = phone.check(true);
+      if (p && p.ok) { value = p.e164; lead.country = p.country; }
+      else if (raw.startsWith("+") && digits.length >= 8 && digits.length <= 15) { value = "+" + digits; lead.country = ""; }
+      else if (!raw.startsWith("+") && digits.length >= 6 && digits.length <= 14) { value = "+" + (form.cc.value || "+1").replace(/\D/g, "") + digits.replace(/^0+/, ""); lead.country = phone.country(); }
+      else problem = "Please add a valid phone number (include your country code if it's not in the list, like +234…).";
+      if (!problem) { form.elements.phone.removeAttribute("aria-invalid"); lead.phoneNational = raw; }
+    }
     else if (!value) problem = q.type === "choice" ? "Please pick an answer." : "Please fill this in.";
     else if (q.type === "email" && !emailOk(value)) problem = "Please enter a valid email.";
     if (problem) { err.textContent = problem; err.hidden = false; return; }
@@ -439,7 +450,8 @@ if (PAGE === "apply") {
       analytics.once("s:optin", { now: true });
       sendLead({ name: lead.name, email: lead.email, phone: lead.phone, country: lead.country || "" });
       initCalendar();
-    } else if (lead.email && lead.phone) {
+    }
+    if (lead.email && lead.phone) {
       // Each answer is saved as it's given (drop-offs show in the sheet). The last one carries "stage".
       const data = { name: lead.name || "", email: lead.email, ...answers };
       const out = last && CONFIG.disqualify.includes(answers.investment);
@@ -585,14 +597,20 @@ function initCalendar() {
   const frame = $("#cal-frame");
   // Loaded once per person (again only if their email changes). /booking loads it for anyone, filled in if we know them.
   const who = lead.email || "";
-  if (!frame || !CONFIG.ghlCalendarUrl || (frame.querySelector("iframe") && frame.dataset.for === who)) return;
-  frame.dataset.for = who;
-  const [first, ...rest] = (lead.name || "").trim().split(/\s+/);
-  const u = new URL(CONFIG.ghlCalendarUrl);
-  // The calendar fills its booking form from these. Its form needs a last name, so a one-word name gets "-".
-  Object.entries({ first_name: first, last_name: rest.join(" ") || (first ? "-" : ""), name: lead.name, email: lead.email, phone: (lead.phone || "").replace(/[^\d+]/g, "") })
-    .forEach(([k, v]) => { if (v) u.searchParams.set(k, v); });
-  frame.innerHTML = `<iframe src="${esc(u.href)}" title="Book your call" allow="payment" scrolling="yes"></iframe>`;
+  if (!frame || !CONFIG.neetoCal || (frame.dataset.loaded && frame.dataset.for === who)) return;
+  frame.dataset.for = who; frame.dataset.loaded = "1";
+  frame.innerHTML = '<div id="neeto-cal" style="width:100%"></div>';
+  window.neetoCal = window.neetoCal || { embed: function () { (neetoCal.q = neetoCal.q || []).push(arguments); } };
+  if (!document.querySelector('script[src*="cdn.neetocal.com"]')) {
+    const js = document.createElement("script"); js.async = true; js.src = "https://cdn.neetocal.com/javascript/embed.js"; document.head.appendChild(js);
+  }
+  // Filled in from what they gave us. The sidebar (call title, length) is hidden.
+  const fill = Object.fromEntries(Object.entries({ name: lead.name, email: lead.email, phone: (lead.phone || "").replace(/[^\d+]/g, "") }).filter(([, v]) => v));
+  neetoCal.embed({
+    type: "inline", id: CONFIG.neetoCal.id, organization: CONFIG.neetoCal.organization, slug: CONFIG.neetoCal.slug,
+    elementSelector: "#neeto-cal", styles: "height: 100%; width: 100%;",
+    queryParams: { dynamicHeight: true, ...fill }, isSidebarAndCoverImgHidden: "true", shouldForwardQueryParams: "false",
+  });
 }
 /* ======================================================================= */
 /* /booking: just the calendar (the link setters send in DMs)             */
@@ -603,11 +621,13 @@ if (PAGE === "booking") initCalendar();
 let bookingSent = false;
 addEventListener("message", e => {
   if (/[?&]debug\b/.test(location.search)) console.log("[calendar message]", e.origin, e.data);   // add ?debug to the link to see them
-  if (!["apply", "apply2", "booking"].includes(PAGE) || bookingSent || !CONFIG.ghlCalendarUrl) return;
-  let fromGhl = false;
-  try { fromGhl = /(^|\.)(leadconnectorhq\.com|msgsndr\.com)$/.test(new URL(e.origin).hostname) || e.origin === new URL(CONFIG.ghlCalendarUrl).origin; } catch {}
-  const text = typeof e.data === "string" ? e.data : Array.isArray(e.data) ? String(e.data[0]) : "";
-  if (!fromGhl || !/booking-complete/i.test(text)) return;
+  if (!["apply", "apply2", "booking"].includes(PAGE) || bookingSent) return;
+  let fromCal = false;
+  try { fromCal = /(^|\.)neetocal\.com$/.test(new URL(e.origin).hostname); } catch {}
+  let text = "";
+  try { text = typeof e.data === "string" ? e.data : JSON.stringify(e.data); } catch {}
+  // NeetoCal tells the page when a meeting is booked; anything that looks like "booked/scheduled/confirmed" counts.
+  if (!fromCal || !/(book|schedul|confirm)(ed|ing[_-]?(complete|success|confirmed))|meeting[_-]?(created|scheduled|booked)/i.test(text)) return;
   bookingSent = true;
   analytics.once("s:booked", { now: true });
   // On /booking we may not know them yet: take their details from the calendar's message when it has them.
@@ -618,7 +638,7 @@ addEventListener("message", e => {
   // The sheet matches people by email, so without one there's nothing to fill in (GoHighLevel has the booking anyway).
   if (lead.email) sendLead({ name: lead.name || "", email: lead.email, phone: lead.phone || "" }, "booked");
   // The call time, if the calendar's message has it, for "Add it to your calendar" on /booked.
-  store.set("booking", { bookedAt: Date.now(), ...((window.callCalendar && callCalendar.fromMessage(e.data)) || {}) });
+  store.set("booking", { bookedAt: Date.now(), sent: !!lead.email, ...((window.callCalendar && callCalendar.fromMessage(e.data)) || {}) });
   setTimeout(() => go("booked"), 1500);
 });
 
@@ -626,6 +646,14 @@ addEventListener("message", e => {
 /* /booked                                                          */
 /* ======================================================================= */
 if (PAGE === "booked") {
+  {
+    const b = store.get("booking") || {};
+    if (lead.email && !b.sent && !(b.bookedAt && Date.now() - b.bookedAt < 6e5 && b.fromPage)) {
+      sendLead({ name: lead.name || "", email: lead.email, phone: lead.phone || "" }, "booked");
+      analytics.once("s:booked", { now: true });
+      store.set("booking", { ...b, bookedAt: b.bookedAt || Date.now(), sent: true });
+    }
+  }
   mountVideo($("#next-steps"), CONFIG.videos.nextSteps, { autoplay: true, title: "Next steps", name: "nextSteps" });
   const grid = $("#faq-videos");
   grid.innerHTML = CONFIG.faqVideos.filter(([, url]) => url).map(([q], i) =>
